@@ -13,11 +13,10 @@ Then type `/lets-start` in Claude Code.
 ## What it does
 
 1. Asks what you're working on
-2. Installs [gstack](https://github.com/garrytan/gstack) if missing
-3. Adds session conventions to `~/.claude/CLAUDE.md` (asks permission first)
-4. Creates a feature branch + worktree at `.worktrees/` inside your repo
-5. Scans project config and summarizes your stack
-6. Routes to the right gstack skill (`/office-hours`, `/plan-ceo-review`, `/plan-eng-review`, etc.)
+2. Routes you to the correct [gstack](https://github.com/garrytan/gstack) skill to get started
+3. Ensures you know what step is recommended next by adding session conventions to `~/.claude/CLAUDE.md` (asks permission first)
+4. Sets up your workspace: creates a feature branch + worktree at `.worktrees/` inside your repo
+5. Summarizes your current stack and makes suggestions, if needed
 
 ## What it modifies
 
