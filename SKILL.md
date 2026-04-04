@@ -23,6 +23,11 @@ copy-run. Only ask the user when it requires their password, is destructive (see
 step using `AskUserQuestion` with tailored options, a marked recommendation, and an
 escape hatch ("something else"). The user should never wonder what to type.
 
+**Wait when the user needs to leave the terminal.** If the next step requires a
+browser, a different app, or reading something like a plan, tell them what to do
+and then STOP. Do not immediately ask "is that done?" or present follow-up options.
+Let the user come back to you when they've completed the task. You may give them a prompt so they know what their response should be.
+
 ## Preamble — run silently before Step 1
 ````bash
 _SD="$HOME/.claude/skills/lets-start"
