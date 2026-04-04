@@ -85,8 +85,9 @@ declines, skip and move on.
 
 ## Step 4: Workspace setup
 
-**Default: work on a feature branch in a worktree.** This keeps main clean and
-lets you run parallel sessions without conflicts.
+**Always create a worktree on a feature branch.** Even for config changes, docs,
+or one-line fixes — every session gets its own branch. This prevents conflicts
+when running parallel sessions. The only exception is if the user explicitly says "stay on main" or "skip the worktree."
 
 First, detect the current state:
 ```bash
@@ -121,7 +122,6 @@ grep -qxF '.worktrees/' "$REPO_DIR/.gitignore" 2>/dev/null || echo '.worktrees/'
   git worktree add "$WORKTREE_DIR" "$BRANCH_NAME"  # if worktree doesn't exist
 ```
 - **New project** — create directory, `git init`, no worktree needed yet
-- **Stay on main** — skip worktree setup. Use for quick fixes, docs, or solo repos.
 - **Something else**
 
 **On a feature branch but in the main checkout (not a worktree) →** create a
