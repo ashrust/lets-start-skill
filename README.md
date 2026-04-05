@@ -26,13 +26,30 @@ Then type `/lets-start` in Claude Code.
 
 It does not modify any source code.
 
+## Install
+
+Run in your terminal:
+```bash
+git clone https://github.com/ashrust/lets-start-skill.git ~/.claude/skills/lets-start
+```
+
+Or paste this prompt into Claude Code:
+> Install the /lets-start skill: `git clone https://github.com/ashrust/lets-start-skill.git ~/.claude/skills/lets-start`
+
+Then type `/lets-start` to kick off your first session.
+
 ## Uninstall
 
+Paste this prompt into Claude Code:
+> Uninstall /lets-start: remove `~/.claude/skills/lets-start`, remove the
+> `# Session conventions` section from `~/.claude/CLAUDE.md`, and remove any
+> `/lets-start` references from `~/.claude/CLAUDE.md`. Don't touch anything else.
+
+Or do it manually:
 ```bash
 rm -rf ~/.claude/skills/lets-start
 ```
-
-Then remove the `# Session conventions` section from `~/.claude/CLAUDE.md` if you added it.
+Then edit `~/.claude/CLAUDE.md` and remove the `# Session conventions` section.
 
 ## Update
 
