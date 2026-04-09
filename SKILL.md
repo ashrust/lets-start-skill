@@ -28,6 +28,19 @@ browser, a different app, or reading something like a plan, tell them what to do
 and then STOP. Do not immediately ask "is that done?" or present follow-up options.
 Let the user come back to you when they've completed the task. You may give them a prompt so they know what their response should be.
 
+**Parallel session safety.** Before force-pushing, rebasing, or deploying, check
+for other active worktrees:
+```bash
+git worktree list
+```
+Force-push and rebase are fine on your own feature branch. Never force-push or
+rebase shared branches. If other worktrees are active, ask the user before deploying.
+
+**Never enter plan mode.** Do not use `EnterPlanMode` or switch to plan mode.
+gstack skills (`/plan-ceo-review`, `/plan-eng-review`, `/office-hours`, etc.) are
+the planning mechanism. If you feel the urge to "plan first", route to a gstack
+skill instead.
+
 ## Preamble — run silently before Step 1
 ````bash
 _SD="$HOME/.claude/skills/lets-start"
@@ -92,9 +105,10 @@ declines, skip and move on.
 
 **Always create a worktree on a feature branch.** Even for config changes, docs,
 or one-line fixes — every session gets its own branch. This prevents conflicts
-when running parallel sessions. The only exception is if the user explicitly says "stay on main" or "skip the worktree."
+when running parallel sessions. The only exception is if the user explicitly says
+"stay on main" or "skip the worktree."
 
-First, detect the current state:
+Detect current state:
 ```bash
 REPO_DIR=$(git rev-parse --show-toplevel 2>/dev/null)
 CURRENT_BRANCH=$(git branch --show-current 2>/dev/null)
@@ -111,52 +125,45 @@ grep -qxF '.worktrees/' "$REPO_DIR/.gitignore" 2>/dev/null || echo '.worktrees/'
 
 **Already in a worktree on a feature branch →** confirm and move on.
 
-**On main (or no repo yet) →** ask via `AskUserQuestion`:
-- **New feature branch** (recommended) — derive `feature/<short-kebab>` from their
-  task description, confirm the name, then create:
+**On main →** derive `feature/<short-kebab>` from the task description, confirm
+the name, then create:
 ```bash
-  BRANCH_SLUG=$(echo "$BRANCH_NAME" | sed 's|/|--|g')
-  WORKTREE_DIR="$REPO_DIR/.worktrees/$BRANCH_SLUG"
-  git fetch origin
-  git worktree add -b "$BRANCH_NAME" "$WORKTREE_DIR" origin/main
-  cd "$WORKTREE_DIR"
+BRANCH_SLUG=$(echo "$BRANCH_NAME" | sed 's|/|--|g')
+WORKTREE_DIR="$REPO_DIR/.worktrees/$BRANCH_SLUG"
+git fetch origin
+git worktree add -b "$BRANCH_NAME" "$WORKTREE_DIR" origin/main
+cd "$WORKTREE_DIR"
 ```
-- **Existing branch** — ask which branch, then find or create its worktree:
-```bash
-  WORKTREE_DIR="$REPO_DIR/.worktrees/$BRANCH_SLUG"
-  git worktree add "$WORKTREE_DIR" "$BRANCH_NAME"  # if worktree doesn't exist
-```
-- **New project** — create directory, `git init`, no worktree needed yet
-- **Something else**
+If the branch name already exists, append a suffix (`-2`, `-3`, etc.).
+Two sessions must never share a branch.
 
-**On a feature branch but in the main checkout (not a worktree) →** create a
-worktree for that branch, then restore the main checkout to main:
+Also offer via `AskUserQuestion`: **Existing branch**, **New project** (`git init`,
+no worktree needed), or **Something else**.
+
+**On a feature branch but not in a worktree →** create one and restore main:
 ```bash
 WORKTREE_DIR="$REPO_DIR/.worktrees/$BRANCH_SLUG"
 git worktree add "$WORKTREE_DIR" "$CURRENT_BRANCH"
 cd "$WORKTREE_DIR"
 (cd "$REPO_DIR" && git checkout main)
 ```
-Confirm: "Worktree ready at `<path>`. Main checkout restored to main."
 
-**Worktree already exists for the target branch →** just `cd` into it. Never
-create a second one.
+**Worktree already exists →** just `cd` into it.
 
-All worktrees live inside the repo at `.worktrees/`:
+All worktrees live at `.worktrees/`:
 `~/code/my-project/.worktrees/feature--add-auth`
 
-## Step 5: Project setup check
+### Parallel session rules
 
-After workspace is ready, silently scan for project conventions — CLAUDE.md,
-memory files, config files (package.json, pyproject.toml, Dockerfile, fly.toml,
-vercel.json, etc.).
+After setup, check `git worktree list`. If other worktrees are active, apply
+these rules silently for the rest of the session:
+- Force-push and rebase are fine on your own feature branch. Never force-push
+  or rebase shared branches (`main`, `develop`, `deploy`, etc.).
+- Before deploying, check deploy history for commits from the last 10 minutes.
+  If found, ask the user before proceeding.
+- Never squash-merge unless the user explicitly asks.
 
-- **If found:** present a brief summary. No question needed.
-- **If nothing found:** ask if they want stack suggestions or have preferences.
-
-## Step 6: Route to the right gstack skill
-
-**Do NOT use `EnterPlanMode`. gstack skills are the planning mechanism.**
+## Step 5: Route to the right gstack skill
 
 Read the installed gstack skill directories to discover what's available:
 ```bash
@@ -165,6 +172,38 @@ ls -1 ~/.claude/skills/gstack/*/SKILL.md 2>/dev/null | sed 's|.*/\(.*\)/SKILL.md
 
 Recommend ONE skill via `AskUserQuestion` based on the user's task description.
 Include 2–3 alternatives plus "Something else". On confirmation, invoke immediately.
+
+## Step 6: Session wrapup
+
+When the user signals they're done (or the task is complete), always report the
+session status before closing:
+
+> **Session status:**
+> - **Branch:** `<branch name>`
+> - **Uncommitted changes:** yes/no
+> - **Unpushed commits:** yes/no
+> - **Deploy status:** last deploy time + whether current branch changes are live
+
+Check with:
+```bash
+git status --short
+git log origin/<branch>..HEAD --oneline
+```
+
+If anything is uncommitted, unpushed, or undeployed, don't fix it automatically —
+just report it clearly and let the user decide.
+
+## Edge cases
+
+**No git repo:** Ask if they want to `git init` or point to an existing repo.
+
+**Dirty working tree:** Warn about uncommitted changes — offer stash, commit, or continue.
+
+**Skip to a skill:** If they say "lets-start, then straight to eng review", skip
+routing and respect the request. Still do workspace setup.
+
+**Parallel deploys:** If the user asks to deploy and other worktrees are active
+on the same repo, check deploy history before proceeding. Never assume it's safe.
 
 ## Updating /lets-start
 
