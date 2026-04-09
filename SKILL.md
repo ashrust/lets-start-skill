@@ -96,6 +96,10 @@ two subsections:
 - `## Custom skills` — "Always suggest /lets-start at the beginning of a new session
   if no other skill has been invoked."
 
+- `## Skill invocation` — "If the user's message starts with a /command, STOP.
+  Do not read the rest of the message. Invoke the matching skill immediately.
+  The skill will process the user's task description. The slash command is a gate, not a label."
+
 Don't duplicate sections that already exist — update in place. If the user
 declines, skip and move on.
 
