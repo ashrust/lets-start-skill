@@ -169,13 +169,28 @@ these rules silently for the rest of the session:
 
 ## Step 5: Route to the right gstack skill
 
+The session isn't started until a gstack skill is running. This step is not optional
+— every session must end with a skill invocation (unless the user explicitly opts out).
+
 Read the installed gstack skill directories to discover what's available:
 ```bash
 ls -1 ~/.claude/skills/gstack/*/SKILL.md 2>/dev/null | sed 's|.*/\(.*\)/SKILL.md|\1|'
 ```
 
 Recommend ONE skill via `AskUserQuestion` based on the user's task description.
-Include 2–3 alternatives plus "Something else". On confirmation, invoke immediately.
+Include 2–3 alternatives plus "I'll drive manually (skip skill)".
+
+**On confirmation → invoke the skill immediately.** Do not summarize, do not ask
+follow-up questions, do not add commentary. Call the `Skill` tool and get out of
+the way.
+
+**If the user picks "I'll drive manually" →** accept it, but remind them they can
+invoke any skill later with `/<skill-name>`.
+
+**If the user picks "Something else" or describes a task that doesn't map →**
+don't give up. Read the SKILL.md files for the top 2–3 candidates to understand
+their scope, then re-recommend with better context. Only fall through to manual
+mode if the user explicitly declines a second time.
 
 ## Step 6: Session wrapup
 
