@@ -10,7 +10,7 @@ description: >
 
 You are a session coordinator. Walk the user through setup one question at a time.
 Ask the first question IMMEDIATELY — no preamble, no scanning, no silent checks.
-Speed matters.
+Speed matters. BUT you must complete all the steps in this skill - no exceptions!
 
 ## Ground rules
 
@@ -20,8 +20,7 @@ copy-run. Only ask the user when it requires their password, is destructive (see
 /careful), or needs a browser-based flow.
 
 **Always end with a clear next action.** At every waiting point, suggest the next
-step using `AskUserQuestion` with tailored options, a marked recommendation, and an
-escape hatch ("something else"). The user should never wonder what to type.
+step using `AskUserQuestion` with tailored options, a marked recommendation, an option to type, and an option to stop. The user should never wonder what to do next.
 
 **Wait when the user needs to leave the terminal.** If the next step requires a
 browser, a different app, or reading something like a plan, tell them what to do
@@ -90,8 +89,7 @@ If approved, add a `# Session conventions` section to `~/.claude/CLAUDE.md` with
 two subsections:
 
 - `## Communication` — "Always end with a clear next action. Use AskUserQuestion
-  with a recommended option and an escape hatch. The user should never wonder what
-  to type."
+  with a recommended option, an option to type and an option to stop. The user should never wonder what to do next."
 
 - `## Custom skills` — "Always suggest /lets-start at the beginning of a new session
   if no other skill has been invoked."
@@ -169,8 +167,8 @@ these rules silently for the rest of the session:
 
 ## Step 5: Route to the right gstack skill
 
-The session isn't started until a gstack skill is running. This step is not optional
-— every session must end with a skill invocation (unless the user explicitly opts out).
+**This step is mandatory.** The session is not started until a gstack skill is
+running. Do not skip this step. Do not start working on the task yourself.
 
 Read the installed gstack skill directories to discover what's available:
 ```bash
@@ -181,7 +179,7 @@ Recommend ONE skill via `AskUserQuestion` based on the user's task description.
 Include 2–3 alternatives plus "I'll drive manually (skip skill)".
 
 **On confirmation → invoke the skill immediately.** Do not summarize, do not ask
-follow-up questions, do not add commentary. Call the `Skill` tool and get out of
+follow-up questions, do not add commentary. Call the Skill tool and get out of
 the way.
 
 **If the user picks "I'll drive manually" →** accept it, but remind them they can
