@@ -42,10 +42,10 @@ skill instead.
 
 ## Preamble — run silently before Step 1
 ````bash
-_SD="$HOME/.claude/skills/lets-start"
+_SD="$HOME/.claude/skills/lets-start-skill"
 [ -d "$_SD/.git" ] && (cd "$_SD" && git fetch origin -q 2>/dev/null && \
   [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ] && \
-  git pull --ff-only origin main -q 2>/dev/null && echo "✓ /lets-start updated.")
+  git pull --ff-only origin main -q 2>/dev/null && bash setup.sh >/dev/null 2>&1 && echo "✓ /lets-start updated.")
 ````
 
 ## Step 1: What are you working on?
@@ -226,5 +226,5 @@ on the same repo, check deploy history before proceeding. Never assume it's safe
 
 The canonical source is https://github.com/ashrust/lets-start-skill.
 ```bash
-cd ~/.claude/skills/lets-start && git pull origin main
+cd ~/.claude/skills/lets-start-skill && git pull origin main && bash setup.sh
 ```
