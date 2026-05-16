@@ -45,6 +45,21 @@ for skill_dir in "$REPO_DIR"/*/; do
   fi
 
   ln -snf "$skill_dir/SKILL.md" "$target/SKILL.md"
+
+  # Symlink any sibling files/dirs (references/, scripts/, etc.) so multi-file
+  # skills work after install. Same safety rule: never clobber a real file/dir.
+  for sibling in "$skill_dir"/*; do
+    [ -e "$sibling" ] || continue
+    sname=$(basename "$sibling")
+    [ "$sname" = "SKILL.md" ] && continue
+    if [ -e "$target/$sname" ] && [ ! -L "$target/$sname" ]; then
+      echo "⚠ $target/$sname is a real file/dir, not a symlink. Refusing to overwrite."
+      echo "  Move it aside and re-run: mv \"$target/$sname\" \"$target/$sname.bak\""
+      exit 1
+    fi
+    ln -snf "$sibling" "$target/$sname"
+  done
+
   echo "  ✓ /$name"
 done
 
