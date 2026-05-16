@@ -5,10 +5,34 @@ A Claude Code skill that makes it easy to get started. At the start of every ses
 ## Install
 
 ```bash
-git clone https://github.com/ashrust/lets-start-skill.git ~/.claude/skills/lets-start
+git clone https://github.com/ashrust/lets-start-skill.git ~/.claude/skills/lets-start-skill
+cd ~/.claude/skills/lets-start-skill && bash setup.sh
 ```
 
-Then type `/lets-start` in Claude Code.
+Or paste this prompt into Claude Code:
+
+> Install the /lets-start skill: `git clone https://github.com/ashrust/lets-start-skill.git ~/.claude/skills/lets-start-skill && cd ~/.claude/skills/lets-start-skill && bash setup.sh`
+
+Then type `/lets-start` to kick off your first session.
+
+## Upgrading from a single-skill install
+
+Earlier versions of this skill cloned directly into `~/.claude/skills/lets-start`.
+If you have that layout (a real git repo at that path, not a symlink), remove it
+before running the new install — `setup.sh` will refuse to clobber it:
+
+```bash
+rm -rf ~/.claude/skills/lets-start
+git clone https://github.com/ashrust/lets-start-skill.git ~/.claude/skills/lets-start-skill
+cd ~/.claude/skills/lets-start-skill && bash setup.sh
+```
+
+## Skills included
+
+| Skill | Description |
+|-------|-------------|
+| `/lets-start` | Session kickoff — workspace setup, project check, gstack routing |
+| `/parallelize` | Split a gstack plan into concurrent sessions with isolated worktrees |
 
 ## What it does
 
@@ -23,38 +47,30 @@ Then type `/lets-start` in Claude Code.
 - **`~/.claude/CLAUDE.md`** — adds a `# Session conventions` section (communication style + custom skill trigger). Only on first run, only with your permission.
 - **`.gitignore`** — appends `.worktrees/` if not already present.
 - **`~/.claude/skills/gstack/`** — installs gstack if missing.
+- **`~/.claude/skills/lets-start/`** and **`~/.claude/skills/parallelize/`** — symlinked directories pointing back to this repo.
 
 It does not modify any source code.
-
-## Install
-
-Run in your terminal:
-```bash
-git clone https://github.com/ashrust/lets-start-skill.git ~/.claude/skills/lets-start
-```
-
-Or paste this prompt into Claude Code:
-> Install the /lets-start skill: `git clone https://github.com/ashrust/lets-start-skill.git ~/.claude/skills/lets-start`
-
-Then type `/lets-start` to kick off your first session.
 
 ## Uninstall
 
 Paste this prompt into Claude Code:
-> Uninstall /lets-start: remove `~/.claude/skills/lets-start`, remove the
-> `# Session conventions` section from `~/.claude/CLAUDE.md`, and remove any
-> `/lets-start` references from `~/.claude/CLAUDE.md`. Don't touch anything else.
+
+> Uninstall /lets-start: remove `~/.claude/skills/lets-start-skill`, `~/.claude/skills/lets-start`,
+> and `~/.claude/skills/parallelize`. Remove the `# Session conventions` section from
+> `~/.claude/CLAUDE.md`. Don't touch anything else.
 
 Or do it manually:
+
 ```bash
-rm -rf ~/.claude/skills/lets-start
+rm -rf ~/.claude/skills/lets-start-skill ~/.claude/skills/lets-start ~/.claude/skills/parallelize
 ```
+
 Then edit `~/.claude/CLAUDE.md` and remove the `# Session conventions` section.
 
 ## Update
 
 ```bash
-cd ~/.claude/skills/lets-start && git pull origin main
+cd ~/.claude/skills/lets-start-skill && git pull origin main && bash setup.sh
 ```
 
 Also auto-updates at the start of each session.
