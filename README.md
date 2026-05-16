@@ -22,6 +22,9 @@ If you have that layout (a real git repo at that path, not a symlink), remove it
 before running the new install — `setup.sh` will refuse to clobber it:
 
 ```bash
+# First, check the old install for unpushed work or local changes:
+cd ~/.claude/skills/lets-start && git status && git log @{u}.. 2>/dev/null
+# If clean, remove and reinstall:
 rm -rf ~/.claude/skills/lets-start
 git clone https://github.com/ashrust/lets-start-skill.git ~/.claude/skills/lets-start-skill
 cd ~/.claude/skills/lets-start-skill && bash setup.sh
@@ -47,7 +50,7 @@ cd ~/.claude/skills/lets-start-skill && bash setup.sh
 - **`~/.claude/CLAUDE.md`** — adds a `# Session conventions` section (communication style + custom skill trigger). Only on first run, only with your permission.
 - **`.gitignore`** — appends `.worktrees/` if not already present.
 - **`~/.claude/skills/gstack/`** — installs gstack if missing.
-- **`~/.claude/skills/lets-start/`** and **`~/.claude/skills/parallelize/`** — symlinked directories pointing back to this repo.
+- **`~/.claude/skills/lets-start/`** and **`~/.claude/skills/parallelize/`** — directories containing a symlinked `SKILL.md` that points back to this repo.
 
 It does not modify any source code.
 
@@ -73,7 +76,7 @@ Then edit `~/.claude/CLAUDE.md` and remove the `# Session conventions` section.
 cd ~/.claude/skills/lets-start-skill && git pull origin main && bash setup.sh
 ```
 
-Also auto-updates at the start of each session.
+Also auto-updates each time you run `/lets-start`.
 
 ## License
 

@@ -43,9 +43,17 @@ skill instead.
 ## Preamble — run silently before Step 1
 ````bash
 _SD="$HOME/.claude/skills/lets-start-skill"
-[ -d "$_SD/.git" ] && (cd "$_SD" && git fetch origin -q 2>/dev/null && \
-  [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ] && \
-  git pull --ff-only origin main -q 2>/dev/null && bash setup.sh >/dev/null 2>&1 && echo "✓ /lets-start updated.")
+[ -d "$_SD/.git" ] && ( cd "$_SD"
+  git fetch origin -q 2>/dev/null || exit
+  [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ] || exit
+  git pull --ff-only origin main -q 2>/dev/null || exit
+  if _OUT=$(bash setup.sh 2>&1); then
+    echo "✓ /lets-start updated."
+  else
+    echo "⚠ /lets-start: git pulled, but setup.sh failed:"
+    echo "$_OUT"
+  fi
+)
 ````
 
 ## Step 1: What are you working on?
