@@ -48,8 +48,9 @@ rm -rf ~/.claude/skills/tidy
 |-------|-------------|
 | `/lets-start` | Session kickoff — workspace setup, project check, gstack routing |
 | `/parallelize` | Split a gstack plan into concurrent sessions with isolated worktrees |
-| `/tidy-code` | Behavior-preserving codebase cleanup in safe, reviewable passes |
 | `/audit-tests` | Audit a repo's test suite against a rubric and scaffold a comprehensive one if it's thin |
+| `/tidy-code` | Behavior-preserving codebase cleanup in safe, reviewable passes |
+| `/autoclean` | Sequential pre-release cleanup: /audit-tests → /tidy-code → /cso, gated between phases |
 
 ## What it does
 
