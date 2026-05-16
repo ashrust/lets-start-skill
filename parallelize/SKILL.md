@@ -61,16 +61,23 @@ Ask the user to confirm or adjust the grouping before proceeding.
 For each independent task, create a branch and worktree:
 
 ```bash
-REPO_DIR=$(git rev-parse --show-toplevel 2>/dev/null)
-# Use the main checkout's repo dir if we're in a worktree
-REPO_DIR=$(git -C "$REPO_DIR" rev-parse --git-common-dir 2>/dev/null | sed 's|/\.git$||')
+# Resolve the main checkout's path, whether we're in it or in a worktree.
+COMMON_DIR=$(git rev-parse --path-format=absolute --git-common-dir)
+REPO_DIR=$(dirname "$COMMON_DIR")
 
-git fetch origin
+# Detect the default branch (main, master, trunk, etc.) instead of hardcoding.
+BASE=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/origin/||')
+BASE=${BASE:-main}
 
-for TASK_BRANCH in "$@"; do
+git fetch origin "$BASE"
+
+# Replace this with the actual branches you want to create.
+BRANCHES=(feature/example-a feature/example-b)
+
+for TASK_BRANCH in "${BRANCHES[@]}"; do
   BRANCH_SLUG=$(echo "$TASK_BRANCH" | sed 's|/|--|g')
   WORKTREE_DIR="$REPO_DIR/.worktrees/$BRANCH_SLUG"
-  git worktree add -b "$TASK_BRANCH" "$WORKTREE_DIR" origin/main
+  git worktree add -b "$TASK_BRANCH" "$WORKTREE_DIR" "origin/$BASE"
 done
 ```
 
@@ -119,9 +126,15 @@ done
    - **Might conflict with another parallel branch** → merge one at a time,
      resolve conflicts between each
 
-3. Execute the merges (one at a time, stopping on conflicts):
+3. Execute the merges from the main checkout (one at a time, stopping on conflicts):
 ```bash
-git checkout main
+# If you're inside a worktree, switch to the main checkout first —
+# you can't check out the default branch from a worktree that doesn't own it.
+COMMON_DIR=$(git rev-parse --path-format=absolute --git-common-dir)
+cd "$(dirname "$COMMON_DIR")"
+
+BASE=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/origin/||')
+git checkout "${BASE:-main}"
 git merge --no-ff <branch-name>
 ```
 
