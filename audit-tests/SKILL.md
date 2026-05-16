@@ -59,10 +59,11 @@ Score the suite on five dimensions, each 0–2. Total: 0–10.
 | **CI hook** | Tests run on every PR in CI | Manual or local-only script | None |
 
 Verdicts:
-- **0–5 → "scaffold over"** — the suite is thin enough that a fresh framework
-  + sample tests + CI hook is the right move.
+- **0–5 → "comprehensive scaffold"** — the suite is thin enough that we build
+  it end-to-end: framework, coverage tooling, tests for every public surface,
+  CI hook. See Step 4 for the iteration loop.
 - **6–8 → "fill gaps"** — the suite is real but has specific holes; add only
-  what is missing.
+  what is missing, prioritized by the rubric dimensions that scored low.
 - **9–10 → "leave alone"** — recommend /qa (for web apps) or /health (for
   ongoing tracking) instead of more tests.
 
@@ -148,44 +149,122 @@ Always include **Just the report, thanks** and **Something else** as options.
 
 ## Step 4: Scaffold (only with consent)
 
-If the user opts in, scaffold the missing pieces. Order matters — get the
-infrastructure right before writing tests on top of it.
+The goal is a *comprehensive* test suite, not a starter kit. When the user
+opts to scaffold, the skill works the test surface end-to-end: every public
+function, every endpoint, every CLI command, every documented behavior earns
+coverage, and the loop continues until a real coverage target is hit or it's
+clear no more progress is possible.
 
-1. **Framework config first.** Make sure the test framework is installed in
-   the right place (dev dependency, not runtime). Set up a proper config
-   file using the ecosystem's conventional location and shape. Don't pick
-   exotic options — defaults are usually right and easier for the team to
-   maintain. Show the planned config diff before applying it.
+If the user explicitly asks for just a starter kit ("minimum viable", "just
+the framework"), or the codebase is so domain-specific that comprehensive
+coverage without their input would produce mostly wrong tests, drop to the
+**Minimal scaffold** sub-mode at the end of this step. Comprehensive is the
+default.
 
-2. **Coverage tooling.** Add the standard coverage tool for the ecosystem
-   (e.g., `coverage` for pytest, built-in for vitest / `go test` / `cargo`,
-   simplecov for Ruby). Configure a minimum threshold the user agrees to.
-   Never set the threshold higher than the current coverage — that just
-   creates a broken build on the first PR. Show the planned threshold and
-   the current coverage side by side before setting it.
+### Comprehensive scaffold
 
-3. **Sample tests for key modules.** Identify the 2–4 most important modules
-   — usually entry points, core business logic, anything the README
-   highlights. For each, write tests covering:
-   - **The golden path** — call it the way it's documented or used in
-     practice.
-   - **One or two error paths** — invalid input, missing resource, etc.
+1. **Framework + tooling first.** Install the test framework as a dev
+   dependency (not runtime). Add the conventional config file using the
+   ecosystem's standard location and shape — defaults are usually right and
+   easier for the team to maintain. Add the standard coverage tool for the
+   ecosystem (e.g., `coverage` for pytest, built-in for vitest / `go test` /
+   `cargo`, simplecov for Ruby). Show the planned config diff before
+   applying it.
 
-   Keep these short and readable. Their job is to model the pattern, not
-   to exhaustively cover the module. The user (or a follow-up session) will
-   extend them. If the module's intent isn't obvious from the code, ask
-   before writing — better to write one good test than five wrong ones.
+   **Coverage threshold rule:** never set the CI threshold higher than the
+   *current* measured coverage. Start the threshold at the current number
+   (0 if no tests existed). It rises as the iteration loop adds coverage —
+   each iteration bumps it to the new measured value, so regressions break
+   the build but the first PR doesn't.
 
-4. **CI hook.** Add a CI config that runs the test command on every PR.
-   Detect which CI system the repo already uses; if none, default to
-   GitHub Actions (most common). Keep the workflow minimal: check out,
-   install deps, run tests, upload coverage if applicable. Show the
-   planned workflow before adding it.
+2. **Enumerate the public surface.** Walk the codebase and list everything
+   that needs coverage. Don't pick favorites — list it all:
+   - Exported / public functions, methods, and classes
+   - HTTP routes and handlers
+   - CLI commands and subcommands
+   - Event handlers and message consumers
+   - Background jobs and scheduled tasks
+   - Documented behaviors in the README
 
-5. **Verify.** Run the suite one more time. Confirm it passes, coverage
-   is now measured, and the new tests are picked up. If anything fails,
-   either fix it or back out the change — don't leave the repo in a worse
+   For each item, decide what kind of test fits best (unit / integration /
+   contract) and what the obvious cases are: golden path, documented error
+   paths, and edge cases clear from the signature (null / empty / boundary).
+
+   Save this list — it becomes the iteration backlog.
+
+3. **Write tests in iterations.** Don't try to do it all at once; iterate
+   in small enough batches that each pass produces a working, mergeable
+   diff. For each iteration:
+
+   - **Pick the next batch (~10 tests)** prioritized by risk: entry points
+     and core business logic first, glue code next, pure helpers last.
+   - **Write the tests.** Use the ecosystem's conventions exactly — match
+     existing tests if any exist, otherwise match what the framework's docs
+     show. Each test asserts a real behavior (return value, side effect,
+     thrown error), never just an existence check.
+   - **Run the suite.** Tests must pass. If a new test fails, it either
+     found a real bug (flag it; the user decides whether to fix the bug or
+     adjust the test) or the test is wrong (fix or drop it).
+   - **Measure coverage.** Record line and branch coverage.
+   - **Bump the CI threshold** to the new measured value.
+
+   Then look at what's still uncovered and plan the next batch from there.
+
+4. **Ask the user when intent is genuinely ambiguous.** If a function's
+   contract isn't obvious from its name, signature, and existing call
+   sites, batch the ambiguity questions and ask via `AskUserQuestion`
+   (5–10 at a time, not one per call). Examples:
+
+   - Two reasonable interpretations of a return value (empty list vs. null
+     for "no results")
+   - Side effects that aren't documented (does this also write to a log?)
+   - Error handling philosophy (throw vs. return Result-style)
+
+   Don't punt ambiguity by writing a smoke test that asserts current
+   behavior — that freezes whatever bug might exist. Ask, or skip the item
+   and note it as needing the user's attention.
+
+5. **CI hook.** Add (or extend) a CI config that runs the test command and
+   the coverage check on every PR. Detect which CI system the repo already
+   uses; default to GitHub Actions if none. Keep the workflow minimal:
+   check out, install deps, run tests with coverage, fail on threshold
+   regression. Show the planned workflow before adding it.
+
+6. **Final verify.** Run the full suite and coverage tool one more time.
+   Confirm: passes, coverage at or above the target, CI workflow valid.
+   If anything fails, fix it or back out — don't leave the repo in a worse
    state than you found it.
+
+### Stop conditions
+
+The iteration loop stops on the first of these:
+
+- **Target reached.** Coverage at or above the agreed target (default
+  80% line, 70% branch) **and** every item in the Step 4.2 inventory has
+  at least golden-path coverage. This is the win condition.
+- **Plateau.** Three consecutive iterations added less than 2% coverage
+  each. The remaining gaps probably need design changes (untestable code,
+  hidden dependencies, code that should be refactored to be testable) or
+  domain knowledge the skill doesn't have. Stop, surface what's still
+  uncovered with specifics, and recommend `/investigate` (for the
+  untestable bits) or `/plan-eng-review` (for the refactor).
+- **Iteration cap.** After 10 iterations, stop regardless. Report what
+  landed, what's uncovered, and let the user decide whether to push
+  further in a follow-up session.
+
+In every stop case, run Step 5 (rescore + hand off) before exiting.
+
+### Minimal scaffold (opt-in only)
+
+Use only if the user explicitly asks for a starter kit, or the codebase is
+so domain-specific that intent-free tests would mostly be wrong.
+
+Same Step 4.1 (framework + tooling), Step 4.5 (CI hook), and Step 4.6
+(verify), but skip the surface enumeration and the iteration loop. Instead,
+write 2–4 representative sample tests for the most important modules —
+golden path plus one error path each. Be explicit in the Step 5 handoff
+that this is a *starter*, not a comprehensive suite, and that the next step
+is either another /audit-tests run on comprehensive or a manual extension.
 
 ## Step 5: Report and hand off
 
@@ -241,9 +320,10 @@ alone is valuable.
 
 **User wants only the scaffold (already knows the suite is bad).** Run a
 quick Step 1+2 to detect the framework and existing layout, then jump to
-Step 4 with a default rubric assumption of "0–3 across the board". Don't
-skip detection entirely — scaffolding the wrong framework is worse than
-scaffolding slowly.
+Step 4 with a default rubric assumption of "0–3 across the board" and
+**comprehensive** as the default mode. Don't skip detection entirely —
+scaffolding the wrong framework is worse than scaffolding slowly. If the
+user wants the minimal sub-mode instead, they have to say so.
 
 **Coverage tool fights you (slow, broken on this codebase, false reports).**
 Don't paper over it. Score Coverage as 1/2 with a note, and recommend a
