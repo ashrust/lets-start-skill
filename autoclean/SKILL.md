@@ -40,13 +40,14 @@ via AskUserQuestion: Continue / Skip next phase / Stop. Never chain phases
 silently.
 
 **Never commit from /autoclean.** /autoclean stays out of git itself —
-each child skill manages its own branches. /tidy-code creates a cleanup
-branch (e.g. `tidy/cleanup-<date>`) and commits per dimension. /cso writes
-findings outside the repo and produces no commits. /audit-tests is the
-one exception: it scaffolds files but does not commit them, expecting the
-user to commit via `/ship` afterward — so if Phase 1 scaffolds anything,
-the gate before Phase 2 prompts the user to commit (because /tidy-code
-refuses to start on a dirty tree).
+each child skill is responsible for its own commits. /tidy-code creates
+a cleanup branch (e.g. `tidy/cleanup-<date>`) and commits per dimension.
+/cso writes findings outside the repo and produces no commits.
+/audit-tests is expected to commit its own scaffolding work. If a child
+skill ever leaves the tree dirty (a bug or interrupted run), /autoclean
+catches that at the next gate and asks the user how to proceed — the
+orchestrator does not silently commit, stash, or discard the user's
+working state.
 
 **Never merge between phases.** Each phase's branch stays independent. The
 user merges them in their own order via `/ship` or manual `git merge` after
@@ -113,27 +114,24 @@ When /audit-tests returns, capture:
 
 - Final score (0–10)
 - Whether it scaffolded (i.e. modified files)
+- Branch name if it created one
 
-Summarize in 2–3 lines. Then check `git status --short`. If the tree is
-dirty (audit-tests scaffolded files), the next phase /tidy-code will
-refuse to start — so the gate must resolve this first.
+Summarize in 2–3 lines, then run a tree-state check before gating:
 
-Gate via AskUserQuestion. Tailor the options to whether the tree is dirty:
+```bash
+git status --short
+```
 
-If clean:
+If the tree is dirty after /audit-tests returns (a child-skill bug or an
+interrupted run — children are expected to commit or skip cleanly), do
+not assume any specific resolution. Surface the dirty state and ask the
+user how to proceed via AskUserQuestion: **Commit and continue**,
+**Stash and continue**, **Skip /tidy-code (only /cso left, which reads)**,
+or **Stop here**. /autoclean does not commit or stash on its own.
+
+If the tree is clean, gate normally:
 - **Continue to /tidy-code** (recommended)
 - **Skip /tidy-code, go to /cso**
-- **Stop here**
-
-If dirty (audit-tests scaffolded):
-- **Commit scaffolded files, then continue to /tidy-code** (recommended) —
-  /autoclean will not commit; tell the user to commit (or run `/ship`)
-  before continuing. Re-run /autoclean at Step 0c picking Phase 2 once
-  committed.
-- **Stash scaffolded files, continue to /tidy-code** — stash then continue.
-  Remind the user to `git stash pop` after /tidy-code.
-- **Skip /tidy-code, go to /cso** — /cso doesn't care about dirty trees
-  (it reads, doesn't write).
 - **Stop here**
 
 If the user picks Stop, skip to Step 4 (final report). If Skip, jump to
@@ -197,8 +195,8 @@ Before presenting the next-step prompt, check for stashed work:
 git stash list | head -3
 ```
 
-If the output is non-empty (i.e. the user stashed audit-tests scaffold at
-the Phase 1 gate, or there was an unrelated pre-existing stash), surface a
+If the output is non-empty (the user picked "Stash and continue" at any
+gate, or there is unrelated pre-existing stashed work), surface a
 one-line reminder below the table:
 
 > ⚠ You have stashed work: `<top stash line>`. Run `git stash pop` to
