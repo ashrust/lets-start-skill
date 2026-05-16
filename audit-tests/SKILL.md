@@ -46,6 +46,13 @@ add new tests alongside or skip — never replace.
 goes through `AskUserQuestion` first with the exact thing you plan to add.
 The user should never be surprised by what landed in their repo.
 
+**Commit each phase cleanly.** Scaffolding work commits itself as it goes
+on whatever branch you're currently on (`/lets-start` typically set up a
+feature branch). Three commit points: framework + tooling setup, each
+iteration of tests added, and the CI hook. Each commit must leave the
+suite passing — never commit a red test. At the end of Step 4 the tree
+must be clean so `/autoclean` (and the user) can trust the handoff.
+
 ## The rubric
 
 Score the suite on five dimensions, each 0–2. Total: 0–10.
@@ -177,6 +184,12 @@ default.
    each iteration bumps it to the new measured value, so regressions break
    the build but the first PR doesn't.
 
+   **Commit the setup.** Once the framework, coverage tool, and initial
+   config are in place and the (empty or pre-existing) suite still passes,
+   commit with a message like `test: scaffold <framework> with coverage`.
+   This keeps the tooling change separate from the test additions that
+   follow, so reviewers can see the setup as one atomic step.
+
 2. **Enumerate the public surface.** Walk the codebase and list everything
    that needs coverage. Don't pick favorites — list it all:
    - Exported / public functions, methods, and classes
@@ -207,6 +220,13 @@ default.
      adjust the test) or the test is wrong (fix or drop it).
    - **Measure coverage.** Record line and branch coverage.
    - **Bump the CI threshold** to the new measured value.
+   - **Commit the iteration.** Only after the suite is green and coverage
+     is measured. Use a message that names the modules and the coverage
+     delta, e.g. `test: cover auth + validation handlers (62% → 71% line)`.
+     One commit per iteration — never bundle multiple iterations into one
+     commit; reviewers and `git bisect` need clean boundaries. If a real
+     bug was flagged and the user opted to fix the bug rather than adjust
+     the test, that fix is a separate commit before this one.
 
    Then look at what's still uncovered and plan the next batch from there.
 
@@ -228,10 +248,12 @@ default.
    the coverage check on every PR. Detect which CI system the repo already
    uses; default to GitHub Actions if none. Keep the workflow minimal:
    check out, install deps, run tests with coverage, fail on threshold
-   regression. Show the planned workflow before adding it.
+   regression. Show the planned workflow before adding it. Commit it
+   separately with a message like `ci: run tests + coverage on every PR`.
 
 6. **Final verify.** Run the full suite and coverage tool one more time.
-   Confirm: passes, coverage at or above the target, CI workflow valid.
+   Confirm: passes, coverage at or above the target, CI workflow valid,
+   and `git status` is clean (every iteration committed, no stray files).
    If anything fails, fix it or back out — don't leave the repo in a worse
    state than you found it.
 
@@ -262,9 +284,11 @@ so domain-specific that intent-free tests would mostly be wrong.
 Same Step 4.1 (framework + tooling), Step 4.5 (CI hook), and Step 4.6
 (verify), but skip the surface enumeration and the iteration loop. Instead,
 write 2–4 representative sample tests for the most important modules —
-golden path plus one error path each. Be explicit in the Step 5 handoff
-that this is a *starter*, not a comprehensive suite, and that the next step
-is either another /audit-tests run on comprehensive or a manual extension.
+golden path plus one error path each. Commit them as a single
+`test: add starter tests for <modules>` commit once the suite is green.
+Be explicit in the Step 5 handoff that this is a *starter*, not a
+comprehensive suite, and that the next step is either another /audit-tests
+run on comprehensive or a manual extension.
 
 ## Step 5: Report and hand off
 
@@ -280,7 +304,7 @@ Re-score against the same rubric and show the before / after:
 Then suggest the next step via `AskUserQuestion`. Tailor to what just
 landed — typical options:
 
-- `/ship` (Recommended) — commit and PR what we just added
+- `/ship` (Recommended) — push the scaffold commits and open a PR
 - `/plan-eng-review` — design a deeper test strategy if the suite still
   needs more thought
 - `/health` — track quality over time
