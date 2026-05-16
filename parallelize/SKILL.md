@@ -60,7 +60,7 @@ Classify each task:
   numbered lane.
 - **Shared-infra (do first)** — touches schema, API contracts, or deploy
   config. The management session does these *before* spawning lanes so every
-  lane branches off the updated main.
+  lane branches off the updated base.
 - **Do after** — depends on one or more lanes finishing. The management
   session does these *after* merging the lanes.
 
@@ -85,32 +85,38 @@ since those become the labels the user navigates by.
 
 ## Step 3: Set up lanes
 
-Pick the next free lane number. There may be leftover `lane-*` worktrees from
-a previous /parallelize the user hasn't cleaned up, so don't assume you're
-starting from 1:
+Resolve the main checkout's path (so paths work whether you ran /parallelize
+from the main checkout or another worktree), detect the default branch (don't
+hardcode `main` — repos use `master`, `trunk`, etc.), and pick the next free
+lane number. Leftover `lane-*` worktrees from a previous /parallelize may
+already exist, so don't assume you're starting from 1:
 
 ```bash
-REPO_DIR=$(git rev-parse --show-toplevel 2>/dev/null)
-# Use the main checkout's repo dir if we're in a worktree
-REPO_DIR=$(git -C "$REPO_DIR" rev-parse --git-common-dir 2>/dev/null | sed 's|/\.git$||')
+# Resolve the main checkout's path, whether we're in it or in a worktree.
+COMMON_DIR=$(git rev-parse --path-format=absolute --git-common-dir)
+REPO_DIR=$(dirname "$COMMON_DIR")
 mkdir -p "$REPO_DIR/.worktrees"
+
+# Detect the default branch (main, master, trunk, etc.) instead of hardcoding.
+BASE=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/origin/||')
+BASE=${BASE:-main}
 
 NEXT_LANE=$(ls "$REPO_DIR/.worktrees" 2>/dev/null \
   | sed -nE 's|^lane-([0-9]+)-.*|\1|p' \
   | sort -n | tail -1)
 NEXT_LANE=$((${NEXT_LANE:-0} + 1))
 
-git fetch origin
+git fetch origin "$BASE"
 ```
 
-Then create one worktree per lane, off origin/main, incrementing the lane
-number for each:
+Then create one worktree per lane, off the default branch, incrementing the
+lane number for each:
 
 ```bash
 # Per lane: SHORT_NAME is kebab-case, 2-3 words from the task
 LANE_BRANCH="lane-${NEXT_LANE}-${SHORT_NAME}"
 LANE_DIR="$REPO_DIR/.worktrees/$LANE_BRANCH"
-git worktree add -b "$LANE_BRANCH" "$LANE_DIR" origin/main
+git worktree add -b "$LANE_BRANCH" "$LANE_DIR" "origin/$BASE"
 NEXT_LANE=$((NEXT_LANE + 1))
 ```
 
@@ -120,7 +126,7 @@ collides with something existing, append `-2`, `-3` to `SHORT_NAME` rather
 than to the lane number.
 
 If Step 2 produced any shared-infra tasks, do them now in the management
-session — every lane branched off origin/main, so this work needs to land
+session — every lane branched off `origin/$BASE`, so this work needs to land
 and the user will rebase lanes onto it (or merge it in during Step 5).
 
 ## Step 4: Hand off to the user
@@ -164,22 +170,31 @@ Step 4 first.
 1. Check the status of each lane branch:
 
 ```bash
+BASE=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/origin/||')
+BASE=${BASE:-main}
 git worktree list
 for branch in <lane branches>; do
   echo "=== $branch ==="
-  git log origin/main..$branch --oneline
+  git log "origin/$BASE..$branch" --oneline
 done
 ```
 
 2. For each lane, recommend a merge strategy:
-   - **Clean, no conflicts expected** → merge to main.
+   - **Clean, no conflicts expected** → merge to the base branch.
    - **Might conflict with another lane** → merge one at a time, resolving
      conflicts between each.
 
-3. Execute the merges (one at a time, stopping on conflicts):
+3. Execute the merges from the main checkout (one at a time, stopping on
+   conflicts). The management window stays open — the bash navigates to the
+   main checkout under the hood because you can't check out the default
+   branch from a worktree that doesn't own it:
 
 ```bash
-git checkout main
+COMMON_DIR=$(git rev-parse --path-format=absolute --git-common-dir)
+cd "$(dirname "$COMMON_DIR")"
+
+BASE=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/origin/||')
+git checkout "${BASE:-main}"
 git merge --no-ff <lane-branch>
 ```
 

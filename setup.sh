@@ -12,7 +12,7 @@ if [ "$SKILLS_DIR" != "$HOME/.claude/skills" ]; then
   echo "    $REPO_DIR"
   echo ""
   echo "  Symlinks would land in $SKILLS_DIR and Claude Code wouldn't discover them."
-  echo "  Fix: rm -rf \"$REPO_DIR\" && git clone https://github.com/ashrust/lets-start-skill.git ~/.claude/skills/lets-start-skill"
+  echo "  Fix: move this directory to ~/.claude/skills/lets-start-skill and re-run."
   exit 1
 fi
 
@@ -30,7 +30,20 @@ for skill_dir in "$REPO_DIR"/*/; do
     exit 1
   fi
 
+  # Clean up a dangling symlink at $target so mkdir -p can proceed.
+  if [ -L "$target" ] && [ ! -e "$target" ]; then
+    rm "$target"
+  fi
+
   mkdir -p "$target"
+
+  # Refuse to overwrite a real (non-symlink) SKILL.md — likely user customization.
+  if [ -e "$target/SKILL.md" ] && [ ! -L "$target/SKILL.md" ]; then
+    echo "⚠ $target/SKILL.md is a real file, not a symlink. Refusing to overwrite."
+    echo "  Move it aside and re-run: mv \"$target/SKILL.md\" \"$target/SKILL.md.bak\""
+    exit 1
+  fi
+
   ln -snf "$skill_dir/SKILL.md" "$target/SKILL.md"
   echo "  ✓ /$name"
 done
