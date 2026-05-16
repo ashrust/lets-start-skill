@@ -36,6 +36,7 @@ cd ~/.claude/skills/lets-start-skill && bash setup.sh
 |-------|-------------|
 | `/lets-start` | Session kickoff — workspace setup, project check, gstack routing |
 | `/parallelize` | Split a gstack plan into concurrent sessions with isolated worktrees |
+| `/audit-tests` | Audit a repo's test suite against a rubric and scaffold a comprehensive one if it's thin |
 
 ## What it does
 
@@ -50,7 +51,7 @@ cd ~/.claude/skills/lets-start-skill && bash setup.sh
 - **`~/.claude/CLAUDE.md`** — adds a `# Session conventions` section (communication style + custom skill trigger). Only on first run, only with your permission.
 - **`.gitignore`** — appends `.worktrees/` if not already present.
 - **`~/.claude/skills/gstack/`** — installs gstack if missing.
-- **`~/.claude/skills/lets-start/`** and **`~/.claude/skills/parallelize/`** — directories containing a symlinked `SKILL.md` that points back to this repo.
+- **`~/.claude/skills/lets-start/`**, **`~/.claude/skills/parallelize/`**, and **`~/.claude/skills/audit-tests/`** — directories containing a symlinked `SKILL.md` that points back to this repo.
 
 It does not modify any source code.
 
@@ -59,13 +60,13 @@ It does not modify any source code.
 Paste this prompt into Claude Code:
 
 > Uninstall /lets-start: remove `~/.claude/skills/lets-start-skill`, `~/.claude/skills/lets-start`,
-> and `~/.claude/skills/parallelize`. Remove the `# Session conventions` section from
-> `~/.claude/CLAUDE.md`. Don't touch anything else.
+> `~/.claude/skills/parallelize`, and `~/.claude/skills/audit-tests`. Remove the `# Session conventions`
+> section from `~/.claude/CLAUDE.md`. Don't touch anything else.
 
 Or do it manually:
 
 ```bash
-rm -rf ~/.claude/skills/lets-start-skill ~/.claude/skills/lets-start ~/.claude/skills/parallelize
+rm -rf ~/.claude/skills/lets-start-skill ~/.claude/skills/lets-start ~/.claude/skills/parallelize ~/.claude/skills/audit-tests
 ```
 
 Then edit `~/.claude/CLAUDE.md` and remove the `# Session conventions` section.
