@@ -101,7 +101,7 @@ Two sub-passes, each with its own commit:
 
 ### Step 4 — Final report
 
-After all dimensions verify clean, fill in the three summary blocks at the top of `TIDY_LOG.md`.
+After all dimensions verify clean, fill in the two summary blocks at the top of `TIDY_LOG.md` and append the disclaimer at the bottom.
 
 **Summary** (the headline numbers reviewers read first):
 

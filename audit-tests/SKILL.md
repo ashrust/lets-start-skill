@@ -376,6 +376,8 @@ run on comprehensive or a manual extension.
 Re-score against the same rubric and **update the existing artifact** at
 `.gstack/test-audits/<YYYY-MM-DD>-audit-tests.md`:
 
+- Set `Run mode` to reflect what actually ran (`fill-gaps` or
+  `comprehensive-scaffold`) — Step 3 wrote `audit` initially.
 - Overwrite the Verdict table with the new scores.
 - Update Scan stats with the post-scaffold numbers (test count, runtime,
   coverage %).
