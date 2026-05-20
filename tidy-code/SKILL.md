@@ -52,7 +52,7 @@ If the repo is polyglot (e.g. TypeScript frontend + Python backend), tidy each s
 For each dimension below, follow the same four-step rhythm:
 
 1. **Detect** — run static-analysis tools to gather evidence. See `references/dimensions.md` for the per-stack tool list.
-2. **Plan** — write the proposed deletions/changes into `TIDY_LOG.md` under the dimension's heading. Group by file. For anything ambiguous, mark `CANDIDATE` and skip.
+2. **Plan** — write the proposed deletions/changes into `TIDY_LOG.md` under the dimension's heading. Group by file. For anything ambiguous, mark `CANDIDATE` and skip. **Also fill in the dimension's `### Scanned clean` section** with what was checked and found clean — list only checks you actually ran with concrete evidence (e.g. "412 .ts files scanned for unused imports — none found"). Pad nothing. A short list of real checks beats a long list of vague claims.
 3. **Apply** — make the edits. Keep the diff focused on this dimension only.
 4. **Verify and commit** — run `scripts/commit-dimension.sh <dimension> "<one-line summary>"`. The script runs `verify.sh` and refuses to commit if anything fails. Never run `git commit` directly — verify gates every dimension. If verify fails, fix the failures or revert before retrying.
 
@@ -101,7 +101,9 @@ Two sub-passes, each with its own commit:
 
 ### Step 4 — Final report
 
-After all dimensions verify clean, write the summary into `TIDY_LOG.md`'s header:
+After all dimensions verify clean, fill in the two summary blocks at the top of `TIDY_LOG.md` and append the disclaimer at the bottom.
+
+**Summary** (the headline numbers reviewers read first):
 
 ```
 Branch: tidy/cleanup-<date>
@@ -110,6 +112,25 @@ Dimensions run: dead-code, dry, defensive, legacy, comments
 Verification: type-check ✓  lint ✓  tests ✓  build ✓
 Stats: N files changed, M files deleted, K files added, L lines net (-Δ)
 Commits: <list of dimension commits>
+```
+
+**Scan stats** (what was looked at vs. what was acted on — the rigor signal):
+
+```
+Files in scope: N (excluded: node_modules, vendor, dist, build, generated)
+Tools run: <per dimension, e.g. dead-code → ts-prune, knip; defensive → custom eslint rules>
+Candidates surfaced: N total
+Applied: N · CANDIDATE (left in place): N · Surfaced as out-of-scope finding: N
+```
+
+Append the **Disclaimer** at the end of `TIDY_LOG.md`:
+
+```
+## Disclaimer
+
+This cleanup is AI-assisted using static-analysis tooling. Tools can
+miss dynamic dispatch, reflection-based usage, and code reachable only
+at runtime. Review the diff for anything safety-critical before merging.
 ```
 
 State the facts. Do not add "next steps" or recommend what to do next — the user knows their workflow.
