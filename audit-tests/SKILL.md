@@ -127,23 +127,104 @@ more tests on top of broken ones makes everything harder to debug.
 
 ## Step 3: Score and report
 
-Apply the rubric. Present the result in this shape:
+Score against the rubric and write a persistent timestamped audit to a
+file. The file is the authoritative record; chat is a summary of it.
 
-> **Test suite audit — `<repo or package name>`**
->
-> Language: Python (pytest) · 47 test files · 312 tests · 4.2s · coverage not measured
+### Set up the artifact location
+
+```bash
+mkdir -p .gstack/test-audits
+grep -qxF '.gstack/' .gitignore 2>/dev/null || echo '.gstack/' >> .gitignore
+```
+
+If that line modified `.gitignore`, stage and commit it as
+`chore(audit-tests): gitignore .gstack/ for audit artifacts` before
+writing the artifact, so the tree stays clean for the next /autoclean
+phase. If `.gstack/` was already ignored, do nothing.
+
+### Write the artifact
+
+Path: `.gstack/test-audits/<YYYY-MM-DD>-audit-tests.md`. Shape:
+
+```markdown
+# Test Suite Audit — <repo>
+
+**Date:** <YYYY-MM-DD>
+**Branch:** <branch>
+**Stack:** <detected stack(s)>
+**Run mode:** audit / fill-gaps / comprehensive-scaffold
+
+## Verdict
+
+**Total: <N>/10 — "<verdict>"**
+
+| Dimension      | Score | Notes |
+|---|---|---|
+| Coverage       | <N>/2 | <evidence — file refs if relevant> |
+| Pyramid        | <N>/2 | <evidence> |
+| Critical paths | <N>/2 | <evidence> |
+| Speed          | <N>/2 | <evidence> |
+| CI hook        | <N>/2 | <evidence> |
+
+## Scan stats
+
+- Test files: <N>
+- Tests: <N>
+- Runtime: <X>s wall-clock
+- Skipped / xfail / ignored: <N> / <N> / <N>
+- Coverage: <X%> (or "not measured — <reason>")
+
+## What was checked and came back clean
+
+List only checks you actually ran with concrete evidence. A short list of
+real checks beats a long list of vague claims. Pad nothing — if you
+didn't look, don't list.
+
+- <e.g. "No `.skip` / `xfail` markers in 312 tests">
+- <e.g. "3 consecutive runs produced identical results — not flaky">
+- <e.g. "Fixtures scoped per-test; no shared mutable state observed">
+- <e.g. "Test discovery in `pyproject.toml` matches actual test layout">
+
+## Gaps that drove the score
+
+For each below-2 dimension, name the specific gap with evidence:
+
+- **Coverage <N>/2:** <reason with file refs>
+- **Pyramid <N>/2:** <reason>
+- **CI hook <N>/2:** <reason>
+
+## What changed (filled in by Step 5 if scaffold ran)
+
+- Added: <files>
+- Modified: <files>
+- Commits: <list>
+
+## Disclaimer
+
+This audit is AI-assisted. Coverage tools and rubrics catch common gaps
+but cannot verify whether tests genuinely exercise critical paths or
+match real product behavior. Use as a first pass between manual reviews,
+not as a substitute.
+```
+
+### Chat summary
+
+After writing the artifact, summarize in chat — keep the rubric table
+and reference the artifact path:
+
+> **Test suite audit — `<repo>`** · <stack> · <N> test files · <T>s · coverage <X%>
 >
 > | Dimension | Score | Notes |
 > |---|---|---|
-> | Coverage | 1/2 | Tests exist but no `coverage` config — couldn't measure |
-> | Pyramid | 1/2 | Unit tests only; no integration tests for the HTTP layer |
-> | Critical paths | 2/2 | Golden path covered; error paths for auth + validation |
+> | Coverage | 1/2 | Tests exist but no `coverage` config |
+> | Pyramid | 1/2 | Unit only; no integration tests for HTTP |
+> | Critical paths | 2/2 | Golden + key error paths |
 > | Speed | 2/2 | Fast and deterministic |
-> | CI hook | 0/2 | No `.github/workflows/` — tests don't run on PR |
+> | CI hook | 0/2 | No `.github/workflows/` |
 >
-> **Total: 6/10 — "fill gaps"**
+> **Total: 6/10 — "fill gaps"** · artifact: `.gstack/test-audits/<date>-audit-tests.md`
 >
-> The big gaps: no coverage tracking, no integration tests for HTTP, no CI hook.
+> Biggest gaps: no coverage tracking, no integration tests, no CI hook.
 
 End with `AskUserQuestion` offering the next move. Pick a recommendation
 based on the score:
@@ -292,14 +373,26 @@ run on comprehensive or a manual extension.
 
 ## Step 5: Report and hand off
 
-Re-score against the same rubric and show the before / after:
+Re-score against the same rubric and **update the existing artifact** at
+`.gstack/test-audits/<YYYY-MM-DD>-audit-tests.md`:
+
+- Overwrite the Verdict table with the new scores.
+- Update Scan stats with the post-scaffold numbers (test count, runtime,
+  coverage %).
+- Fill in the "What changed" section: added/modified files and the
+  commit list from Step 4.3.
+- Add any new entries to "What was checked and came back clean" that
+  the scaffold work newly verified (e.g. "CI workflow YAML lints clean
+  via `actionlint`").
+
+Then summarize the before / after in chat:
 
 > **After scaffold:**
 > - Coverage: 1/2 → 2/2 (now 78%)
 > - Pyramid: 1/2 → 2/2 (added HTTP integration tests)
 > - CI hook: 0/2 → 2/2 (added `.github/workflows/test.yml`)
 >
-> **Total: 6/10 → 10/10**
+> **Total: 6/10 → 10/10** · artifact updated
 
 Then suggest the next step via `AskUserQuestion`. Tailor to what just
 landed — typical options:
