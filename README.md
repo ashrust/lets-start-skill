@@ -65,7 +65,7 @@ rm -rf ~/.claude/skills/tidy
 - **`~/.claude/CLAUDE.md`** — adds a `# Session conventions` section (communication style + custom skill trigger). Only on first run, only with your permission.
 - **`.gitignore`** — appends `.worktrees/` if not already present.
 - **`~/.claude/skills/gstack/`** — installs gstack if missing.
-- **`~/.claude/skills/lets-start/`**, **`~/.claude/skills/parallelize/`**, **`~/.claude/skills/tidy-code/`**, and **`~/.claude/skills/audit-tests/`** — directories containing a symlinked `SKILL.md` (and, for multi-file skills, symlinked `references/` and `scripts/`) that points back to this repo.
+- **`~/.claude/skills/lets-start/`**, **`~/.claude/skills/parallelize/`**, **`~/.claude/skills/tidy-code/`**, **`~/.claude/skills/audit-tests/`**, and **`~/.claude/skills/autoclean/`** — directories containing a symlinked `SKILL.md` (and, for multi-file skills, symlinked `references/` and `scripts/`) that points back to this repo.
 
 It does not modify any source code.
 
@@ -74,13 +74,14 @@ It does not modify any source code.
 Paste this prompt into Claude Code:
 
 > Uninstall /lets-start: remove `~/.claude/skills/lets-start-skill`, `~/.claude/skills/lets-start`,
-> `~/.claude/skills/parallelize`, `~/.claude/skills/tidy-code`, and `~/.claude/skills/audit-tests`.
+> `~/.claude/skills/parallelize`, `~/.claude/skills/tidy-code`, `~/.claude/skills/audit-tests`,
+> and `~/.claude/skills/autoclean`.
 > Remove the `# Session conventions` section from `~/.claude/CLAUDE.md`. Don't touch anything else.
 
 Or do it manually:
 
 ```bash
-rm -rf ~/.claude/skills/lets-start-skill ~/.claude/skills/lets-start ~/.claude/skills/parallelize ~/.claude/skills/tidy-code ~/.claude/skills/audit-tests
+rm -rf ~/.claude/skills/lets-start-skill ~/.claude/skills/lets-start ~/.claude/skills/parallelize ~/.claude/skills/tidy-code ~/.claude/skills/audit-tests ~/.claude/skills/autoclean
 ```
 
 Then edit `~/.claude/CLAUDE.md` and remove the `# Session conventions` section.
@@ -92,6 +93,10 @@ cd ~/.claude/skills/lets-start-skill && git pull origin main && bash setup.sh
 ```
 
 Also auto-updates each time you run `/lets-start`.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md). Current version: **0.1.0**.
 
 ## License
 
