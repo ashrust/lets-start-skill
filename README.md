@@ -26,7 +26,7 @@ Paste this prompt into Claude Code:
 |-------|-------------|
 | `/lets-start` | Session kickoff — workspace setup, project check, gstack routing |
 | `/parallelize` | Split a gstack plan into concurrent sessions with isolated worktrees |
-| `/audit-tests` | Audit a repo's test suite against a rubric and write a comprehensive one (golden path + error paths, with CI hook) if it's thin |
+| `/audit-tests` | Audit a repo's test suite — write a comprehensive one if it's thin |
 | `/tidy-code` | Behavior-preserving codebase cleanup in safe, reviewable passes |
 | `/autoclean` | Sequential pre-release cleanup: /audit-tests → /tidy-code → /cso, gated between phases |
 
