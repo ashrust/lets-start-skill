@@ -2,6 +2,12 @@
 
 All notable changes to this repo. Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [SemVer](https://semver.org/).
 
+## [0.1.3] - 2026-05-22
+
+### Changed
+
+- **`/audit-tests` row in the skills table** — trimmed from 124 chars to 66 to match the length of sibling rows. Now reads "Audit a repo's test suite — write a comprehensive one if it's thin." The "write" verb (vs. "scaffold") still signals the skill actually generates tests, which was the point of the v0.1.1 change.
+
 ## [0.1.2] - 2026-05-22
 
 ### Changed
