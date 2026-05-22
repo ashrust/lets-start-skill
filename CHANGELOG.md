@@ -2,6 +2,22 @@
 
 All notable changes to this repo. Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [SemVer](https://semver.org/).
 
+## [0.1.1] - 2026-05-22
+
+### Added
+
+- **`/lets-start` writes a fourth global convention** — first-run setup now adds a `## Verify before assert` subsection to `~/.claude/CLAUDE.md` alongside Communication, Custom skills, and Skill invocation. The rule: any CLI command, flag, file path, API endpoint, or config key written in a response must be verified in the current session (via `--help`, source/doc on the current system, or canonical URL) — install banners and prior-session memory are not sufficient. Sessions that don't verify must label commands as `(unverified)`. SKILL.md Step 3 also now adds missing subsections in place instead of rewriting the section.
+
+### Changed
+
+- **README description, install, and uninstall** — rewrote the lead-in to be specific about what the skill does and the cleanup skills it ships with. Install and Uninstall sections now show only the Claude Code prompt (the bash equivalent was redundant — the prompt asks Claude to run it).
+- **`/audit-tests` row in skills table** — now reflects what the skill actually does: writes a comprehensive suite (golden path + error paths, with CI hook), not just framework scaffolding. The "scaffold" framing understated the iteration loop in Step 4.
+- **"What it does" section in README** — reordered to match the actual SKILL.md step order (gstack install → conventions → workspace → routing → wrapup) and dropped the "summarizes your current stack" claim, which the skill doesn't do.
+
+### Removed
+
+- **Legacy `/tidy` migration note** — the standalone `/tidy` install was never released, so the README no longer carries instructions for migrating away from it.
+
 ## [0.1.0] - 2026-05-20
 
 Initial versioned release. The repo went from a single-skill `/lets-start` install to a multi-skill bundle with four sibling skills sharing one `setup.sh`.

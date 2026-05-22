@@ -1,15 +1,10 @@
 # /lets-start
 
-A Claude Code skill that makes it easy to get started. At the start of every session: asks what you're building, sets up a worktree, checks your project config, and routes you to the right [gstack](https://github.com/garrytan/gstack) skill.
+A Claude Code skill that starts every session in the right place. `/lets-start` asks what you're building, sets up an isolated feature branch + worktree, installs [gstack](https://github.com/garrytan/gstack) if missing, adds session conventions to your global `CLAUDE.md`, and routes you to the gstack skill that fits the task. Ships with `/audit-tests`, `/tidy-code`, `/autoclean`, and `/parallelize` for pre-release and parallel-work passes.
 
 ## Install
 
-```bash
-git clone https://github.com/ashrust/lets-start-skill.git ~/.claude/skills/lets-start-skill
-cd ~/.claude/skills/lets-start-skill && bash setup.sh
-```
-
-Or paste this prompt into Claude Code:
+Paste this prompt into Claude Code:
 
 > Install the /lets-start skill: `git clone https://github.com/ashrust/lets-start-skill.git ~/.claude/skills/lets-start-skill && cd ~/.claude/skills/lets-start-skill && bash setup.sh`
 
@@ -30,35 +25,24 @@ git clone https://github.com/ashrust/lets-start-skill.git ~/.claude/skills/lets-
 cd ~/.claude/skills/lets-start-skill && bash setup.sh
 ```
 
-If you previously installed `/tidy` standalone at `~/.claude/skills/tidy`,
-remove that directory after running `setup.sh` — the new install lives at
-`~/.claude/skills/tidy-code` (renamed to avoid conflicts), so the old `/tidy`
-will stay as a redundant duplicate until you delete it:
-
-```bash
-# Check for local changes first:
-cd ~/.claude/skills/tidy && git status 2>/dev/null
-# If clean (or it's not a git repo), remove:
-rm -rf ~/.claude/skills/tidy
-```
-
 ## Skills included
 
 | Skill | Description |
 |-------|-------------|
 | `/lets-start` | Session kickoff — workspace setup, project check, gstack routing |
 | `/parallelize` | Split a gstack plan into concurrent sessions with isolated worktrees |
-| `/audit-tests` | Audit a repo's test suite against a rubric and scaffold a comprehensive one if it's thin |
+| `/audit-tests` | Audit a repo's test suite against a rubric and write a comprehensive one (golden path + error paths, with CI hook) if it's thin |
 | `/tidy-code` | Behavior-preserving codebase cleanup in safe, reviewable passes |
 | `/autoclean` | Sequential pre-release cleanup: /audit-tests → /tidy-code → /cso, gated between phases |
 
 ## What it does
 
 1. Asks what you're working on
-2. Routes you to the correct [gstack](https://github.com/garrytan/gstack) skill to get started
-3. Ensures you know what step is recommended next by adding session conventions to `~/.claude/CLAUDE.md` (asks permission first)
+2. Installs [gstack](https://github.com/garrytan/gstack) if it's missing
+3. Adds session conventions to `~/.claude/CLAUDE.md` (asks permission first)
 4. Sets up your workspace: creates a feature branch + worktree at `.worktrees/` inside your repo
-5. Summarizes your current stack and makes suggestions, if needed
+5. Routes you to the right gstack skill for the task
+6. Reports session status (uncommitted, unpushed) when you wrap up
 
 ## What it modifies
 
@@ -77,14 +61,6 @@ Paste this prompt into Claude Code:
 > `~/.claude/skills/parallelize`, `~/.claude/skills/tidy-code`, `~/.claude/skills/audit-tests`,
 > and `~/.claude/skills/autoclean`.
 > Remove the `# Session conventions` section from `~/.claude/CLAUDE.md`. Don't touch anything else.
-
-Or do it manually:
-
-```bash
-rm -rf ~/.claude/skills/lets-start-skill ~/.claude/skills/lets-start ~/.claude/skills/parallelize ~/.claude/skills/tidy-code ~/.claude/skills/audit-tests ~/.claude/skills/autoclean
-```
-
-Then edit `~/.claude/CLAUDE.md` and remove the `# Session conventions` section.
 
 ## Update
 
