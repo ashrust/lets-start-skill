@@ -94,7 +94,7 @@ Silently check if `~/.claude/CLAUDE.md` contains a `# Session conventions` secti
 > Your global CLAUDE.md is missing some session conventions. Can I add them?
 
 If approved, add a `# Session conventions` section to `~/.claude/CLAUDE.md` with
-two subsections:
+four subsections:
 
 - `## Communication` — "Always end with a clear next action. Use AskUserQuestion
   with a recommended option, an option to type and an option to stop. The user should never wonder what to do next."
@@ -106,8 +106,17 @@ two subsections:
   Do not read the rest of the message. Invoke the matching skill immediately.
   The skill will process the user's task description. The slash command is a gate, not a label."
 
-Don't duplicate sections that already exist — update in place. If the user
-declines, skip and move on.
+- `## Verify before assert` — "Before writing any CLI command, flag, subcommand,
+  file path, API endpoint, or config key in a response — whether in a plan, a
+  code block, or prose — you must have verified it in THIS session by running
+  `--help` on the tool, reading the actual source/doc on the current system,
+  or fetching the canonical URL. Install banners and prior-session memory are
+  not sufficient. If you have not verified in-session, either verify now or
+  explicitly label the command as (unverified)."
+
+Don't duplicate sections that already exist — update in place. If only some
+subsections are present, add the missing ones without rewriting the rest.
+If the user declines, skip and move on.
 
 **If already present**, skip silently.
 
