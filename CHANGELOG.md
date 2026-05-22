@@ -2,6 +2,13 @@
 
 All notable changes to this repo. Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [SemVer](https://semver.org/).
 
+## [0.1.2] - 2026-05-22
+
+### Changed
+
+- **README "Upgrading from a single-skill install" and "Update" sections** — converted the remaining bash blocks to Claude Code prompts so install / upgrade / update / uninstall are now consistent across the README. Earlier passes only converted install and uninstall.
+- **README "Changelog" section** — dropped the inline `Current version: 0.1.0` reference (which was already stale at v0.1.1) and points to the `VERSION` file instead. One less thing to forget on each bump.
+
 ## [0.1.1] - 2026-05-22
 
 ### Added
