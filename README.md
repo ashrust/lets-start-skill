@@ -14,16 +14,11 @@ Then type `/lets-start` to kick off your first session.
 
 Earlier versions of this skill cloned directly into `~/.claude/skills/lets-start`.
 If you have that layout (a real git repo at that path, not a symlink), remove it
-before running the new install — `setup.sh` will refuse to clobber it:
+before installing the new layout — `setup.sh` will refuse to clobber it.
 
-```bash
-# First, check the old install for unpushed work or local changes:
-cd ~/.claude/skills/lets-start && git status && git log @{u}.. 2>/dev/null
-# If clean, remove and reinstall:
-rm -rf ~/.claude/skills/lets-start
-git clone https://github.com/ashrust/lets-start-skill.git ~/.claude/skills/lets-start-skill
-cd ~/.claude/skills/lets-start-skill && bash setup.sh
-```
+Paste this prompt into Claude Code:
+
+> Check `~/.claude/skills/lets-start` for unpushed commits or uncommitted changes. If it's clean (or it's already a symlink), remove it with `rm -rf ~/.claude/skills/lets-start`. Then install the new layout: `git clone https://github.com/ashrust/lets-start-skill.git ~/.claude/skills/lets-start-skill && cd ~/.claude/skills/lets-start-skill && bash setup.sh`
 
 ## Skills included
 
@@ -64,15 +59,15 @@ Paste this prompt into Claude Code:
 
 ## Update
 
-```bash
-cd ~/.claude/skills/lets-start-skill && git pull origin main && bash setup.sh
-```
+Paste this prompt into Claude Code:
+
+> Update /lets-start: `cd ~/.claude/skills/lets-start-skill && git pull origin main && bash setup.sh`
 
 Also auto-updates each time you run `/lets-start`.
 
 ## Changelog
 
-See [CHANGELOG.md](CHANGELOG.md). Current version: **0.1.0**.
+See [CHANGELOG.md](CHANGELOG.md). Current version is in [VERSION](VERSION).
 
 ## License
 
