@@ -1,247 +1,356 @@
 ---
 name: lets-start
 description: >
-  Session kickoff skill. Use at the beginning of any Claude Code session to gather
-  context, set up the workspace, check project setup, and route to the right gstack skill.
-  Triggers on /lets-start or when the user says "new session" or "kick off".
+  Session kickoff skill for Claude Code and Codex. Use at the beginning of a
+  coding session to gather context, install gstack if needed, set up an
+  isolated branch/worktree, check host-specific conventions, and route to the
+  right gstack or companion skill.
 ---
 
-# /lets-start — Session Kickoff
+# /lets-start - Session Kickoff
 
-You are a session coordinator. Walk the user through setup one question at a time.
-Ask the first question IMMEDIATELY — no preamble, no scanning, no silent checks.
-Speed matters. BUT you must complete all the steps in this skill - no exceptions!
+You are a cross-host session coordinator. Start fast, gather only missing
+context, set up a clean workspace, then route into the right specialist skill.
 
-## Ground rules
+## Host Model
 
-**Execute, don't instruct.** You have a terminal — use it. Run `git fetch`,
-`gcloud auth`, `npm install`, etc. yourself. Never paste commands for the user to
-copy-run. Only ask the user when it requires their password, is destructive (see
-/careful), or needs a browser-based flow.
+Decide which host you are running in before Step 1:
 
-**Always end with a clear next action.** At every waiting point, suggest the next
-step using `AskUserQuestion` with tailored options, a marked recommendation, an option to type, and an option to stop. The user should never wonder what to do next.
+- **Claude Code** if the session exposes Claude-only primitives such as
+  `AskUserQuestion`, `EnterPlanMode`, or a Skill tool, or if this repo is
+  installed under `$HOME/.claude/skills/lets-start-skill`.
+- **Codex** if the session exposes Codex-style commentary/final channels,
+  Codex app tools, or this repo is installed under
+  `$HOME/.codex/skills/lets-start-skill`.
 
-**Wait when the user needs to leave the terminal.** If the next step requires a
-browser, a different app, or reading something like a plan, tell them what to do
-and then STOP. Do not immediately ask "is that done?" or present follow-up options.
-Let the user come back to you when they've completed the task. You may give them a prompt so they know what their response should be.
+If uncertain, infer from the installed `lets-start` path. If that is still
+unclear, continue with the current host's available tools and avoid host-only
+primitives that are not callable.
 
-**Parallel session safety.** Before force-pushing, rebasing, or deploying, check
-for other active worktrees:
+Host settings:
+
+| Host | Skills root | Conventions file | gstack repo | gstack setup |
+| --- | --- | --- | --- | --- |
+| Claude Code | `$HOME/.claude/skills` | project `CLAUDE.md`, else `$HOME/.claude/CLAUDE.md` | `$HOME/.claude/skills/gstack` | `./setup --host claude` |
+| Codex | `$HOME/.codex/skills` | project `AGENTS.md`, else `$HOME/.codex/AGENTS.md` | `$HOME/.gstack/repos/gstack` | `./setup --host codex --prefix` |
+
+## Ground Rules
+
+**Execute, don't instruct.** Use the terminal and available tools yourself.
+Only ask the user when an action needs credentials, a browser flow, an
+approval, or a judgment call.
+
+**Ask with the current host's tools.** In Claude Code, use `AskUserQuestion`
+when it is available and a structured choice is useful. In Codex, Claude-only
+primitives such as `AskUserQuestion`, `EnterPlanMode`, and the Skill tool do
+not exist; ask one concise plain-text question, or use Codex's dedicated
+question UI only when the current mode explicitly allows it.
+
+**Route using installed skill files.** In Claude Code, invoke the selected skill
+through the Skill tool when it is available; otherwise read its `SKILL.md` and
+continue in-process. In Codex, read `$HOME/.codex/skills/<skill-name>/SKILL.md`
+and continue in-process. If a routed companion skill still mentions a
+Claude-only primitive, translate it to the Codex equivalent described above
+instead of stopping. Load referenced scripts or files only as needed.
+
+**Use host-appropriate gstack names.** Claude Code gstack installs may expose
+short names such as `/office-hours`, `/review`, and `/ship`, or namespaced
+names such as `/gstack-office-hours`. Discover what is installed before
+routing. Codex should install and route to namespaced `gstack-*` skills, for
+example `gstack-office-hours`, `gstack-plan-eng-review`, `gstack-review`,
+`gstack-qa`, `gstack-cso`, and `gstack-ship`.
+
+**Track workdirs explicitly.** Shell commands do not reliably persist `cd`
+across tool calls. After creating or selecting a worktree, use its absolute path
+as the working directory for subsequent commands and tell the user which path
+is active.
+
+**Parallel session safety.** Before rebasing, force-pushing, merging lanes, or
+deploying, check:
+
 ```bash
 git worktree list
 ```
-Force-push and rebase are fine on your own feature branch. Never force-push or
-rebase shared branches. If other worktrees are active, ask the user before deploying.
 
-**Never enter plan mode.** Do not use `EnterPlanMode` or switch to plan mode.
-gstack skills (`/plan-ceo-review`, `/plan-eng-review`, `/office-hours`, etc.) are
-the planning mechanism. If you feel the urge to "plan first", route to a gstack
-skill instead.
+Force-push and rebase only your own feature branch. Never force-push shared
+branches such as `main`, `master`, `develop`, or `deploy`. If other worktrees
+are active, ask before deploying.
 
-## Preamble — run silently before Step 1
-````bash
-_SD="$HOME/.claude/skills/lets-start-skill"
-[ -d "$_SD/.git" ] && ( cd "$_SD"
-  git fetch origin -q 2>/dev/null || exit
-  [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ] || exit
-  git pull --ff-only origin main -q 2>/dev/null || exit
-  if _OUT=$(bash setup.sh 2>&1); then
-    echo "✓ /lets-start updated."
-  else
-    echo "⚠ /lets-start: git pulled, but setup.sh failed:"
-    echo "$_OUT"
-  fi
-)
-````
+## Preamble - Optional Self-Update
 
-## Step 1: What are you working on?
+If this skill is installed from a git checkout, silently fast-forward that
+checkout before Step 1. Use the host-specific setup command after pulling:
 
-Ask this FIRST as plain text — no tool call, no options:
+```bash
+# Replace this placeholder with the host selected in "Host Model" before running.
+_LS_HOST="<claude-or-codex>"
+_LS_REPO=""
+if [ "$_LS_HOST" = "codex" ]; then
+  _LS_REPO="$HOME/.codex/skills/lets-start-skill"
+elif [ "$_LS_HOST" = "claude" ]; then
+  _LS_REPO="$HOME/.claude/skills/lets-start-skill"
+fi
+
+if [ -d "$_LS_REPO/.git" ]; then
+  (
+    cd "$_LS_REPO" &&
+    git fetch origin -q 2>/dev/null &&
+    git pull --ff-only origin main -q 2>/dev/null &&
+    if [ "$_LS_HOST" = "codex" ]; then
+      bash setup.sh --host codex
+    else
+      bash setup.sh --host claude
+    fi
+  ) >/dev/null 2>&1 || true
+fi
+```
+
+Do not block the session if self-update fails.
+
+## Step 1: What Are We Building?
+
+Ask this first unless the user already described the task:
 
 > What are you working on? Give me a one-liner.
 
-If the user already described the task in their prompt (e.g. "lets-start, I need to
-add auth to my app"), skip this and use what they said.
+If the prompt already includes the task, use that as the one-liner and
+continue.
 
 ## Step 2: Check gstack
 
-Silently check if gstack is installed and up to date:
-```bash
-test -d ~/.claude/skills/gstack && echo "installed" || echo "missing"
-```
+Silently check whether gstack is installed for the current host.
 
-**If missing or behind**, tell the user and install/update it:
-> gstack isn't installed yet — installing now.
+Claude Code check:
 
 ```bash
-git clone --single-branch --depth 1 https://github.com/garrytan/gstack.git ~/.claude/skills/gstack && cd ~/.claude/skills/gstack && ./setup
+test -f "$HOME/.claude/skills/gstack/SKILL.md" && echo "installed" || echo "missing"
 ```
 
-After install, add a "gstack" section to the project's CLAUDE.md (or global
-`~/.claude/CLAUDE.md` if no project CLAUDE.md exists) listing available skills
-and noting to use `/browse` for all web browsing.
+Codex check:
 
-**If installed, skip silently.**
-
-## Step 3: Check global CLAUDE.md conventions
-
-Silently check if `~/.claude/CLAUDE.md` contains a `# Session conventions` section.
-
-**If missing**, ask permission:
-
-> Your global CLAUDE.md is missing some session conventions. Can I add them?
-
-If approved, add a `# Session conventions` section to `~/.claude/CLAUDE.md` with
-four subsections:
-
-- `## Communication` — "Always end with a clear next action. Use AskUserQuestion
-  with a recommended option, an option to type and an option to stop. The user should never wonder what to do next."
-
-- `## Custom skills` — "Always suggest /lets-start at the beginning of a new session
-  if no other skill has been invoked."
-
-- `## Skill invocation` — "If the user's message starts with a /command, STOP.
-  Do not read the rest of the message. Invoke the matching skill immediately.
-  The skill will process the user's task description. The slash command is a gate, not a label."
-
-- `## Verify before assert` — "Before writing any CLI command, flag, subcommand,
-  file path, API endpoint, or config key in a response — whether in a plan, a
-  code block, or prose — you must have verified it in THIS session by running
-  `--help` on the tool, reading the actual source/doc on the current system,
-  or fetching the canonical URL. Install banners and prior-session memory are
-  not sufficient. If you have not verified in-session, either verify now or
-  explicitly label the command as (unverified)."
-
-Don't duplicate sections that already exist — update in place. If only some
-subsections are present, add the missing ones without rewriting the rest.
-If the user declines, skip and move on.
-
-**If already present**, skip silently.
-
-## Step 4: Workspace setup
-
-**Always create a worktree on a feature branch.** Even for config changes, docs,
-or one-line fixes — every session gets its own branch. This prevents conflicts
-when running parallel sessions. The only exception is if the user explicitly says
-"stay on main" or "skip the worktree."
-
-Detect current state:
 ```bash
-REPO_DIR=$(git rev-parse --show-toplevel 2>/dev/null)
-CURRENT_BRANCH=$(git branch --show-current 2>/dev/null)
-IN_WORKTREE=$(git rev-parse --is-inside-work-tree 2>/dev/null && \
-  [ "$(git rev-parse --show-toplevel)" != "$(git rev-parse --git-common-dir | sed 's|/\.git$||')" ] && \
-  echo "yes" || echo "no")
+test -f "$HOME/.codex/skills/gstack/SKILL.md" && \
+test -d "$HOME/.gstack/repos/gstack/.git" && \
+echo "installed" || echo "missing"
 ```
 
-Ensure `.worktrees/` exists and is git-ignored:
+If missing, say:
+
+> gstack is not installed for `<host>` yet - installing now.
+
+Claude Code install:
+
+```bash
+mkdir -p "$HOME/.claude/skills"
+if [ ! -d "$HOME/.claude/skills/gstack/.git" ]; then
+  git clone --single-branch --depth 1 https://github.com/garrytan/gstack.git "$HOME/.claude/skills/gstack"
+fi
+(cd "$HOME/.claude/skills/gstack" && ./setup --host claude)
+```
+
+Codex install:
+
+```bash
+mkdir -p "$HOME/.gstack/repos"
+if [ ! -d "$HOME/.gstack/repos/gstack/.git" ]; then
+  git clone --single-branch --depth 1 https://github.com/garrytan/gstack.git "$HOME/.gstack/repos/gstack"
+fi
+(cd "$HOME/.gstack/repos/gstack" && ./setup --host codex --prefix)
+```
+
+If the repo exists but host skills are missing, run only the setup command for
+that host. If setup fails because a prerequisite such as Bun is missing, report
+the exact blocker and ask before installing that prerequisite. Do not run
+gstack team mode unless the user explicitly asks.
+
+## Step 3: Check Session Conventions
+
+Use the current host's conventions file:
+
+- Claude Code: prefer project `CLAUDE.md` at the repo root; if there is no repo,
+  use `$HOME/.claude/CLAUDE.md`.
+- Codex: prefer project `AGENTS.md` at the repo root; if there is no repo, use
+  `$HOME/.codex/AGENTS.md`.
+
+Silently check whether the selected file already has a
+`# Session conventions` section. If missing, ask permission to add it. If
+approved, add or update only the missing pieces:
+
+- `## Communication` - End waiting points with a clear next action. Claude Code
+  may use `AskUserQuestion`; Codex should ask plainly unless a dedicated Codex
+  question UI is available in the current mode.
+- `## Custom skills` - Suggest `/lets-start` at the beginning of a new work
+  session when no more specific skill has been invoked.
+- `## Skill invocation` - If a user starts with `/command`, treat it as an
+  intent to use that skill immediately.
+- `## Verify before assert` - Before writing an exact command, flag, file path,
+  endpoint, or config key, verify it in the current session or label it
+  unverified.
+- `## gstack` - gstack skills may be short or namespaced in Claude Code; Codex
+  installs them as `gstack-*`. Use gstack's browser skill or Codex's in-app
+  browser according to the user's request and the active tools.
+
+Do not rewrite unrelated conventions content.
+
+## Step 4: Workspace Setup
+
+Default to an isolated feature branch and worktree unless the user explicitly
+says "stay here", "stay on main", or "skip the worktree".
+
+Detect state:
+
+```bash
+REPO_DIR=$(git rev-parse --show-toplevel 2>/dev/null || true)
+CURRENT_BRANCH=$(git branch --show-current 2>/dev/null || true)
+GIT_DIR=$(git rev-parse --path-format=absolute --git-dir 2>/dev/null || true)
+COMMON_DIR=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true)
+DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/origin/||')
+DEFAULT_BRANCH=${DEFAULT_BRANCH:-main}
+```
+
+If not in a git repo, ask whether to initialize a new repo or point to an
+existing one. Do not create a repo without confirmation.
+
+If the tree is dirty, summarize `git status --short` and ask whether to
+continue, commit, or stash. Do not hide dirty state inside a new worktree.
+
+Ensure `.worktrees/` exists and is ignored:
+
 ```bash
 mkdir -p "$REPO_DIR/.worktrees"
 grep -qxF '.worktrees/' "$REPO_DIR/.gitignore" 2>/dev/null || echo '.worktrees/' >> "$REPO_DIR/.gitignore"
 ```
 
-**Already in a worktree on a feature branch →** confirm and move on.
+### If Already in a Worktree
 
-**On main →** derive `feature/<short-kebab>` from the task description, confirm
-the name, then create:
+If `GIT_DIR` and `COMMON_DIR` differ, confirm the active absolute path and
+continue there.
+
+### If on the Default Branch
+
+Derive `feature/<short-kebab>` from the task description. If the name collides,
+append `-2`, `-3`, etc. Then create the worktree:
+
 ```bash
-BRANCH_SLUG=$(echo "$BRANCH_NAME" | sed 's|/|--|g')
+BRANCH_NAME="feature/<short-kebab>"
+BRANCH_SLUG=$(printf '%s' "$BRANCH_NAME" | sed 's|/|--|g')
 WORKTREE_DIR="$REPO_DIR/.worktrees/$BRANCH_SLUG"
-git fetch origin
-git worktree add -b "$BRANCH_NAME" "$WORKTREE_DIR" origin/main
-cd "$WORKTREE_DIR"
+git fetch origin "$DEFAULT_BRANCH"
+git worktree add -b "$BRANCH_NAME" "$WORKTREE_DIR" "origin/$DEFAULT_BRANCH"
 ```
-If the branch name already exists, append a suffix (`-2`, `-3`, etc.).
-Two sessions must never share a branch.
 
-Also offer via `AskUserQuestion`: **Existing branch**, **New project** (`git init`,
-no worktree needed), or **Something else**.
+Continue all future commands with the working directory set to `$WORKTREE_DIR`.
 
-**On a feature branch but not in a worktree →** create one and restore main:
+### If on a Feature Branch in the Main Checkout
+
+Move the branch into a worktree and restore the main checkout to the default
+branch:
+
 ```bash
+BRANCH_SLUG=$(printf '%s' "$CURRENT_BRANCH" | sed 's|/|--|g')
 WORKTREE_DIR="$REPO_DIR/.worktrees/$BRANCH_SLUG"
 git worktree add "$WORKTREE_DIR" "$CURRENT_BRANCH"
-cd "$WORKTREE_DIR"
-(cd "$REPO_DIR" && git checkout main)
+(cd "$REPO_DIR" && git checkout "$DEFAULT_BRANCH")
 ```
 
-**Worktree already exists →** just `cd` into it.
+Continue all future commands with the working directory set to `$WORKTREE_DIR`.
 
-All worktrees live at `.worktrees/`:
-`~/code/my-project/.worktrees/feature--add-auth`
+## Step 5: Route to the Right Skill
 
-### Parallel session rules
+Routing is mandatory unless the user explicitly says they want to drive
+manually or skip specialist routing.
 
-After setup, check `git worktree list`. If other worktrees are active, apply
-these rules silently for the rest of the session:
-- Force-push and rebase are fine on your own feature branch. Never force-push
-  or rebase shared branches (`main`, `develop`, `deploy`, etc.).
-- Before deploying, check deploy history for commits from the last 10 minutes.
-  If found, ask the user before proceeding.
-- Never squash-merge unless the user explicitly asks.
+Discover installed skills for the current host:
 
-## Step 5: Route to the right gstack skill
+Claude Code:
 
-**This step is mandatory.** The session is not started until a gstack skill is
-running. Do not skip this step. Do not start working on the task yourself.
-
-Read the installed gstack skill directories to discover what's available:
 ```bash
-ls -1 ~/.claude/skills/gstack/*/SKILL.md 2>/dev/null | sed 's|.*/\(.*\)/SKILL.md|\1|'
+find -L "$HOME/.claude/skills" -maxdepth 2 -name SKILL.md -print 2>/dev/null | \
+  sed 's|.*/skills/||; s|/SKILL.md$||' | sort
 ```
 
-Recommend ONE skill via `AskUserQuestion` based on the user's task description.
-Include 2–3 alternatives plus "I'll drive manually (skip skill)".
+Codex:
 
-**On confirmation → invoke the skill immediately.** Do not summarize, do not ask
-follow-up questions, do not add commentary. Call the Skill tool and get out of
-the way.
+```bash
+find -L "$HOME/.codex/skills" -maxdepth 2 -name SKILL.md -print 2>/dev/null | \
+  sed 's|.*/skills/||; s|/SKILL.md$||' | sort
+```
 
-**If the user picks "I'll drive manually" →** accept it, but remind them they can
-invoke any skill later with `/<skill-name>`.
+Recommend one primary skill and up to three alternatives based on the task:
 
-**If the user picks "Something else" or describes a task that doesn't map →**
-don't give up. Read the SKILL.md files for the top 2–3 candidates to understand
-their scope, then re-recommend with better context. Only fall through to manual
-mode if the user explicitly declines a second time.
+- Product exploration or ambiguous feature idea: `office-hours` or
+  `gstack-office-hours`
+- Scope or product strategy review: `plan-ceo-review` or
+  `gstack-plan-ceo-review`
+- Architecture, data flow, implementation plan: `plan-eng-review` or
+  `gstack-plan-eng-review`
+- Design/system/UI plan: `plan-design-review` or `gstack-plan-design-review`
+- Developer experience: `plan-devex-review`, `devex-review`,
+  `gstack-plan-devex-review`, or `gstack-devex-review`
+- Code review of existing changes: `review` or `gstack-review`
+- Live web QA or user-flow testing: `qa`, `qa-only`, `gstack-qa`, or
+  `gstack-qa-only`
+- Security audit: `cso` or `gstack-cso`
+- Shipping or PR prep: `ship` or `gstack-ship`
+- Merge/deploy verification: `land-and-deploy` or `gstack-land-and-deploy`
+- Test-suite audit/scaffold: `audit-tests`
+- Behavior-preserving cleanup: `tidy-code`
+- Full pre-release cleanup: `autoclean`
+- Split an approved plan into work lanes: `parallelize`
 
-## Step 6: Session wrapup
+Prefer an installed exact match. In Codex, prefer `gstack-*` names for gstack
+skills. If the user confirms a skill, continue its workflow immediately in the
+same turn. If they choose manual mode, accept it and remind them they can
+invoke installed skills later by name.
 
-When the user signals they're done (or the task is complete), always report the
-session status before closing:
+## Step 6: Session Wrapup
+
+When the user signals that the task is complete, report:
 
 > **Session status:**
+> - **Path:** `<absolute path>`
 > - **Branch:** `<branch name>`
 > - **Uncommitted changes:** yes/no
 > - **Unpushed commits:** yes/no
-> - **Deploy status:** last deploy time + whether current branch changes are live
+> - **Suggested next action:** `<ship/review/stop/etc.>`
 
 Check with:
+
 ```bash
 git status --short
-git log origin/<branch>..HEAD --oneline
+git log origin/$(git branch --show-current)..HEAD --oneline 2>/dev/null || true
 ```
 
-If anything is uncommitted, unpushed, or undeployed, don't fix it automatically —
-just report it clearly and let the user decide.
+Do not automatically commit, push, deploy, or clean up worktrees during wrapup
+unless the user asks.
 
-## Edge cases
+## Edge Cases
 
-**No git repo:** Ask if they want to `git init` or point to an existing repo.
+**Skip to a skill:** If the user says "lets-start, then straight to eng review",
+still do setup, then route directly to the matching installed eng review skill.
 
-**Dirty working tree:** Warn about uncommitted changes — offer stash, commit, or continue.
+**Existing branch:** If the user wants an existing branch, find or create its
+worktree and continue there instead of making a new branch.
 
-**Skip to a skill:** If they say "lets-start, then straight to eng review", skip
-routing and respect the request. Still do workspace setup.
+**New project:** If the user wants a new project, initialize only after
+confirmation. Worktree isolation is unnecessary until there is a default branch.
 
-**Parallel deploys:** If the user asks to deploy and other worktrees are active
-on the same repo, check deploy history before proceeding. Never assume it's safe.
+**No gstack restart yet:** If gstack skills were just installed and the host has
+not restarted, they may not auto-trigger by metadata. Reading the `SKILL.md`
+file by path is still valid inside this skill.
 
-## Updating /lets-start
+## Updating This Skill
 
-The canonical source is https://github.com/ashrust/lets-start-skill.
+The upstream source is https://github.com/ashrust/lets-start-skill.
+
+Claude Code:
+
 ```bash
-cd ~/.claude/skills/lets-start-skill && git pull origin main && bash setup.sh
+cd "$HOME/.claude/skills/lets-start-skill" && git pull origin main && bash setup.sh --host claude
+```
+
+Codex:
+
+```bash
+cd "$HOME/.codex/skills/lets-start-skill" && git pull origin main && bash setup.sh --host codex
 ```
