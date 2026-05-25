@@ -11,7 +11,7 @@ The smoke suite verifies:
 - `setup.sh` parses and passes shell syntax checks.
 - Explicit Codex install links bundled skills under `.codex/skills`.
 - Explicit Claude Code install links bundled skills under `.claude/skills`.
-- The `/setup-then-deploy` bundle entry is installed for both hosts.
+- The `/ship-then-deploy` bundle entry is installed for both hosts.
 - Auto-detection works when the checkout lives under a host skills root.
 - Auto-detection fails clearly when the checkout is somewhere else.
 

@@ -51,7 +51,7 @@ run_codex_install() {
   assert_file "$tmp/.codex/skills/audit-tests/SKILL.md"
   assert_file "$tmp/.codex/skills/autoclean/SKILL.md"
   assert_file "$tmp/.codex/skills/parallelize/SKILL.md"
-  assert_file "$tmp/.codex/skills/setup-then-deploy/SKILL.md"
+  assert_file "$tmp/.codex/skills/ship-then-deploy/SKILL.md"
   assert_file "$tmp/.codex/skills/tidy-code/SKILL.md"
   assert_contains /tmp/lets-start-codex.log "Done. Type /lets-start in Codex"
   assert_no_file "$tmp/.claude/skills/lets-start/SKILL.md"
@@ -68,7 +68,7 @@ run_claude_install() {
   assert_file "$tmp/.claude/skills/audit-tests/SKILL.md"
   assert_file "$tmp/.claude/skills/autoclean/SKILL.md"
   assert_file "$tmp/.claude/skills/parallelize/SKILL.md"
-  assert_file "$tmp/.claude/skills/setup-then-deploy/SKILL.md"
+  assert_file "$tmp/.claude/skills/ship-then-deploy/SKILL.md"
   assert_file "$tmp/.claude/skills/tidy-code/SKILL.md"
   assert_contains /tmp/lets-start-claude.log "Done. Type /lets-start in Claude Code"
   assert_no_file "$tmp/.codex/skills/lets-start/SKILL.md"
@@ -81,7 +81,7 @@ run_auto_detection() {
   HOME="$tmp" bash "$tmp/.codex/skills/lets-start-skill/setup.sh" >/tmp/lets-start-auto.log
   assert_contains /tmp/lets-start-auto.log "Installing bundled skills for Codex"
   assert_file "$tmp/.codex/skills/lets-start/SKILL.md"
-  assert_file "$tmp/.codex/skills/setup-then-deploy/SKILL.md"
+  assert_file "$tmp/.codex/skills/ship-then-deploy/SKILL.md"
 }
 
 run_auto_requires_host_when_external() {

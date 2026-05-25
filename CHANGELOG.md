@@ -2,6 +2,12 @@
 
 All notable changes to this repo. Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [SemVer](https://semver.org/).
 
+## [0.2.1] - 2026-05-25
+
+### Changed
+
+- **Renamed `/setup-then-deploy` to `/ship-then-deploy`** — the skill still runs `/gstack-setup-deploy` only when deploy config is missing, then runs `/gstack-ship` and `/gstack-land-and-deploy`, but the name now reflects the main release flow more accurately.
+
 ## [0.2.0] - 2026-05-25
 
 ### Added

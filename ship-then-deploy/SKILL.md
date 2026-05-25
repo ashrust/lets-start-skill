@@ -1,14 +1,14 @@
 ---
-name: setup-then-deploy
+name: ship-then-deploy
 description: >
   End-to-end gstack release wrapper. Ensures deploy configuration exists by
   running gstack setup-deploy when needed, then runs gstack ship followed by
-  gstack land-and-deploy. Use when the user says "setup then deploy", "ship
+  gstack land-and-deploy. Use when the user says "ship then deploy", "ship
   and deploy", "ship this to production", "run setup-deploy if needed then
   deploy", or wants one command to configure, ship, land, and verify.
 ---
 
-# /setup-then-deploy - Configure, Ship, Land, Deploy
+# /ship-then-deploy - Ship, Land, Deploy
 
 You are the release orchestrator. Your job is to run the normal gstack release
 skills in order:
@@ -126,7 +126,7 @@ Read and follow `$LAND_DEPLOY_SKILL`.
 Report the release outcome in this shape:
 
 ```text
-/setup-then-deploy complete
+/ship-then-deploy complete
 - Setup: skipped (config already existed) / ran / stopped
 - Ship: PR created at <url> / stopped
 - Land and deploy: merged and healthy / stopped / failed
