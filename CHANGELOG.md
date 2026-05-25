@@ -20,7 +20,7 @@ All notable changes to this repo. Format loosely follows [Keep a Changelog](http
 
 ### Changed
 
-- **Installer host detection** - `setup.sh` infers Claude Code vs. Codex from the repo location, supports explicit `--host` installs from any checkout, and rejects unknown host values.
+- **Installer host detection** - `setup.sh` infers Claude Code vs. Codex from the repo location and rejects unknown host values.
 - **README install docs** - split install, update, uninstall, and migration instructions into Claude Code and Codex sections, with host-specific files and gstack paths.
 - **README skill inventory and uninstall instructions** — added `/setup-then-deploy` everywhere the bundled skills are listed.
 - **`/lets-start` routing hints** — combined release requests such as "ship and deploy" now route to `/setup-then-deploy` first.

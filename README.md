@@ -28,10 +28,6 @@ Paste this prompt into Codex:
 Then start a new Codex session or reload skills if needed, and invoke
 `/lets-start`.
 
-`setup.sh --host claude` and `setup.sh --host codex` can also install from any
-checkout. Cloning into the host skills root keeps auto-detection and
-self-update paths simple.
-
 ## Upgrading from a single-skill install
 
 Earlier versions cloned directly into `~/.claude/skills/lets-start`. If you have
