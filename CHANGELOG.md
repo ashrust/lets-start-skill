@@ -2,6 +2,20 @@
 
 All notable changes to this repo. Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [SemVer](https://semver.org/).
 
+## [0.2.0] - 2026-05-25
+
+### Added
+
+- **Codex-first install path** - `setup.sh` now supports `--host codex` and installs the bundled skills under `~/.codex/skills/<name>/` when the repo is cloned to `~/.codex/skills/lets-start-skill`.
+- **Cross-host `/lets-start` workflow** - the kickoff skill now branches between Claude Code and Codex paths, conventions files, question styles, routing mechanics, and gstack install commands.
+- **Codex gstack bootstrap** - `/lets-start` now installs gstack for Codex via `~/.gstack/repos/gstack` plus `./setup --host codex --prefix`, so routed Codex skills are available as `gstack-*`.
+- **Setup smoke tests** - `tests/setup-smoke.sh` verifies Claude Code installs, Codex installs, host auto-detection, and clear failure when auto-detection cannot infer a host.
+
+### Changed
+
+- **Installer host detection** - `setup.sh` infers Claude Code vs. Codex from the repo location, supports explicit `--host` installs from any checkout, and rejects unknown host values.
+- **README install docs** - split install, update, uninstall, and migration instructions into Claude Code and Codex sections, with host-specific files and gstack paths.
+
 ## [0.1.3] - 2026-05-22
 
 ### Changed
