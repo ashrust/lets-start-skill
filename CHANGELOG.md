@@ -9,12 +9,15 @@ All notable changes to this repo. Format loosely follows [Keep a Changelog](http
 - **Codex-first install path** - `setup.sh` now supports `--host codex` and installs the bundled skills under `~/.codex/skills/<name>/` when the repo is cloned to `~/.codex/skills/lets-start-skill`.
 - **Cross-host `/lets-start` workflow** - the kickoff skill now branches between Claude Code and Codex paths, conventions files, question styles, routing mechanics, and gstack install commands.
 - **Codex gstack bootstrap** - `/lets-start` now installs gstack for Codex via `~/.gstack/repos/gstack` plus `./setup --host codex --prefix`, so routed Codex skills are available as `gstack-*`.
-- **Setup smoke tests** - `tests/setup-smoke.sh` verifies Claude Code installs, Codex installs, host auto-detection, and clear failure when auto-detection cannot infer a host.
+- **`/setup-then-deploy`** — new release wrapper that checks whether `CLAUDE.md` already has gstack deploy configuration, runs `/gstack-setup-deploy` when that config is missing, then hands off to `/gstack-ship` and `/gstack-land-and-deploy` in sequence. The wrapper does not reimplement deploy logic; it reads the installed gstack child skills and stops cleanly if any child skill needs user input or hits a safety gate.
+- **Setup smoke tests** - `tests/setup-smoke.sh` verifies Claude Code installs, Codex installs, host auto-detection, clear failure when auto-detection cannot infer a host, and `/setup-then-deploy` installation for both hosts.
 
 ### Changed
 
 - **Installer host detection** - `setup.sh` infers Claude Code vs. Codex from the repo location, supports explicit `--host` installs from any checkout, and rejects unknown host values.
 - **README install docs** - split install, update, uninstall, and migration instructions into Claude Code and Codex sections, with host-specific files and gstack paths.
+- **README skill inventory and uninstall instructions** — added `/setup-then-deploy` everywhere the bundled skills are listed.
+- **`/lets-start` routing hints** — combined release requests such as "ship and deploy" now route to `/setup-then-deploy` first.
 
 ## [0.1.3] - 2026-05-22
 

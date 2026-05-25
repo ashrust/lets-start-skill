@@ -5,8 +5,9 @@ A Claude Code and Codex skill that starts every session in the right place.
 sets up an isolated feature branch and worktree, checks host-specific session
 conventions, and routes you to the gstack or companion skill that fits the task.
 
-The bundle also ships `/audit-tests`, `/tidy-code`, `/autoclean`, and
-`/parallelize` for pre-release cleanup, test coverage, and parallel work passes.
+The bundle also ships `/audit-tests`, `/tidy-code`, `/autoclean`,
+`/parallelize`, and `/setup-then-deploy` for pre-release cleanup, test
+coverage, parallel work, and release passes.
 
 ## Install
 
@@ -56,6 +57,7 @@ Codex prompt:
 | `/audit-tests` | Audit a repo's test suite and write a comprehensive one if it is thin |
 | `/tidy-code` | Behavior-preserving codebase cleanup in safe, reviewable passes |
 | `/autoclean` | Sequential pre-release cleanup: /audit-tests -> /tidy-code -> /cso |
+| `/setup-then-deploy` | Configure deploy if needed, then run gstack ship and land-and-deploy |
 
 ## What it does
 
@@ -79,7 +81,8 @@ Codex prompt:
 - **Codex gstack:** installs the gstack repo at `~/.gstack/repos/gstack/` and
   links Codex-ready skills into `~/.codex/skills/gstack*`.
 - **Bundled skills:** installs `lets-start`, `parallelize`, `tidy-code`,
-  `audit-tests`, and `autoclean` under the selected host's skills directory.
+  `audit-tests`, `autoclean`, and `setup-then-deploy` under the selected host's
+  skills directory.
 
 It does not modify application source code.
 
@@ -87,11 +90,11 @@ It does not modify application source code.
 
 Claude Code prompt:
 
-> Uninstall /lets-start from Claude Code: remove `~/.claude/skills/lets-start-skill`, `~/.claude/skills/lets-start`, `~/.claude/skills/parallelize`, `~/.claude/skills/tidy-code`, `~/.claude/skills/audit-tests`, and `~/.claude/skills/autoclean`. Remove the `# Session conventions` section from `~/.claude/CLAUDE.md` only if it was added by /lets-start. Do not touch anything else.
+> Uninstall /lets-start from Claude Code: remove `~/.claude/skills/lets-start-skill`, `~/.claude/skills/lets-start`, `~/.claude/skills/parallelize`, `~/.claude/skills/tidy-code`, `~/.claude/skills/audit-tests`, `~/.claude/skills/autoclean`, and `~/.claude/skills/setup-then-deploy`. Remove the `# Session conventions` section from `~/.claude/CLAUDE.md` only if it was added by /lets-start. Do not touch anything else.
 
 Codex prompt:
 
-> Uninstall /lets-start from Codex: remove `~/.codex/skills/lets-start-skill`, `~/.codex/skills/lets-start`, `~/.codex/skills/parallelize`, `~/.codex/skills/tidy-code`, `~/.codex/skills/audit-tests`, and `~/.codex/skills/autoclean`. Remove the `# Session conventions` section from `~/.codex/AGENTS.md` only if it was added by /lets-start. Do not touch anything else.
+> Uninstall /lets-start from Codex: remove `~/.codex/skills/lets-start-skill`, `~/.codex/skills/lets-start`, `~/.codex/skills/parallelize`, `~/.codex/skills/tidy-code`, `~/.codex/skills/audit-tests`, `~/.codex/skills/autoclean`, and `~/.codex/skills/setup-then-deploy`. Remove the `# Session conventions` section from `~/.codex/AGENTS.md` only if it was added by /lets-start. Do not touch anything else.
 
 ## Update
 

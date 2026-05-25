@@ -292,17 +292,21 @@ Recommend one primary skill and up to three alternatives based on the task:
   `gstack-qa-only`
 - Security audit: `cso` or `gstack-cso`
 - Shipping or PR prep: `ship` or `gstack-ship`
+- Configure, ship, land, and deploy in one pass: `setup-then-deploy`
 - Merge/deploy verification: `land-and-deploy` or `gstack-land-and-deploy`
 - Test-suite audit/scaffold: `audit-tests`
 - Behavior-preserving cleanup: `tidy-code`
 - Full pre-release cleanup: `autoclean`
 - Split an approved plan into work lanes: `parallelize`
 
+For combined release requests such as "ship and deploy", "ship this to
+production", or "run setup-deploy if needed then deploy", recommend
+`setup-then-deploy` as the primary skill.
+
 Prefer an installed exact match. In Codex, prefer `gstack-*` names for gstack
 skills. If the user confirms a skill, continue its workflow immediately in the
 same turn. If they choose manual mode, accept it and remind them they can
 invoke installed skills later by name.
-
 ## Step 6: Session Wrapup
 
 When the user signals that the task is complete, report:
